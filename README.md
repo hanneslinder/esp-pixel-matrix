@@ -32,12 +32,16 @@ Once the matrix is up and running you can update the web app and the ESP32 code 
 In the `settings` section of the web interface there is an upload form for OTA update data. This form expects 2 files to be uploaded: 
 `spiffs.bin` and `firmware.bin`
 
-`spiffs.bin`: contains the web app and can be build via platformIO -> `Build File System Image`
+`spiffs.bin`: contains the web app and can be build via platformIO -> `Build File System Image` 
+(The web app build process should already copy the built artifacts to the `/esp32/data` directory, which is then used for building the file system image)
+
 `firmware.bin`: contains the esp32 code and can be build via platformIO -> `Build`
 
 The output of both commands sould be located in the `.pio/build/wemos_d1_mini32` folder (`wemos_d1_mini32` might be different if you use another device as build target)
 
 Just upload both files in the web UI. After successful upload the device reboots itself and should have the new code. In theory there should be a rollback mechanism for botched updates included but I've not tried this. So best to not unplug the power while flashing a new firmware :) 
+
+Please note that your ESP32 needs the `ota.csv` partition layout!
 
 ### wire up 
 
