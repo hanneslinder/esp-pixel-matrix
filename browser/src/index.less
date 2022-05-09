@@ -1,0 +1,234 @@
+#canvas-grid,
+#canvas-text-layer {
+	pointer-events: none;
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+}
+
+#canvas-background-layer {
+	background: #000000;
+}
+
+#canvas-wrapper {
+	position: relative;
+	border: 10px solid var(--color-dark-2);
+	border-radius: 10px;
+}
+
+html {
+	--color-text: #f1fcff;
+	--color-text-2: #818aa5;
+	--color-highlight-1: #3c4a73;
+	--color-highlight-2: #5d8dff;
+	--color-dark-1: #1d1d28;
+	--color-dark-2: #262837;
+	--color-dark-3: #313345;
+	--header-height: 40px;
+}
+
+body {
+	padding: 0;
+	margin: 0;
+	background: var(--color-dark-1);
+	color: var(--color-text);
+	font-family: "Work Sans", sans-serif;
+	font-weight: 300;
+}
+
+.layout {
+	display: flex;
+	flex-direction: column;
+	flex-grow: 1;
+	width: 100vw;
+}
+
+.content {
+	display: flex;
+	justify-content: space-between;
+	flex-basis: calc(100vh - var(--header-height));
+}
+
+.main-content {
+	flex-grow: 1;
+	flex-shrink: 1;
+	overflow: auto;
+	display: flex;
+	align-items: center;
+	flex-direction: column;
+	justify-content: center;
+}
+
+.sidebar-left {
+	background: var(--color-dark-2);
+	max-height: calc(100vh - var(--header-height));
+	overflow: visible;
+}
+
+.sidebar-right {
+	background: var(--color-dark-2);
+	flex-grow: 0;
+	flex-basis: 350px;
+	min-width: 280px;
+	max-height: calc(100vh - var(--header-height));
+	overflow: auto;
+}
+
+#app {
+	display: flex;
+	justify-content: center;
+}
+
+.header {
+	flex-grow: 0;
+	flex-basis: 40px;
+	display: flex;
+	background: var(--color-dark-2);
+	align-items: center;
+	justify-content: center;
+
+	.connection {
+		display: flex;
+		color: var(--color-text-2);
+		font-size: 14px;
+
+		svg {
+			height: 12px;
+			transform: translate(0px, 3px);
+		}
+
+		.connection-state .svg-icon {
+			margin-right: 20px;
+		}
+
+		.connection-send-receive {
+			margin-left: 20px;
+		}
+	}
+
+	.icon-button {
+		margin-right: 10px;
+	}
+}
+
+.sidebar-icon {
+	cursor: pointer;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+
+	&.is-active {
+		background: var(--color-highlight-1);
+	}
+
+	&:not(.is-active):hover {
+		background: var(--color-dark-3);
+	}
+}
+
+input[type="text"] {
+	background: var(--color-dark-1);
+	color: var(--color-text);
+	padding: 5px 10px;
+	border: none;
+	height: 30px;
+	border-radius: 2px;
+}
+
+progress {
+	margin-top: 20px;
+	background: initial;
+}
+
+progress::-webkit-progress-bar {
+	background: var(--color-dark-1);
+}
+
+progress::-webkit-progress-value {
+	background: var(--color-highlight-2);
+}
+
+input[type="range"] {
+	background-color: transparent;
+	-webkit-appearance: none;
+}
+
+input[type="range"]:focus,
+input[type="text"]:focus {
+	outline: none;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+	background: var(--color-highlight-1);
+	border: 1px solid var(--color-dark-3);
+	border-radius: 5px;
+	width: 100%;
+	height: 12px;
+	cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+	margin-top: -3px;
+	width: 16px;
+	height: 16px;
+	background: var(--color-dark-1);
+	border-radius: 12px;
+	cursor: pointer;
+	-webkit-appearance: none;
+}
+
+input[type="range"]:focus::-webkit-slider-runnable-track {
+	background: var(--color-highlight-1);
+}
+
+input[type="number"]::-webkit-inner-spin-button {
+	-webkit-appearance: none;
+}
+
+input[type="number"] {
+	background: var(--color-dark-1);
+	color: var(--color-text);
+	outline: none;
+	border: none;
+	padding: 5px;
+	width: 30px;
+	height: 30px;
+	text-align: center;
+	border-radius: 2px;
+}
+
+button {
+	cursor: pointer;
+	background: var(--color-dark-1);
+	color: var(--color-text);
+	padding: 10px;
+	margin-top: 10px;
+	display: block;
+	border: none;
+	border-radius: 2px;
+}
+
+::-webkit-scrollbar {
+	width: 8px;
+	height: 8px;
+}
+::-webkit-scrollbar-thumb {
+	background: #ffffff30;
+	transition: background 0.3s ease;
+	border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+	background: #ffffff50;
+}
+::-webkit-scrollbar-track {
+	background: transparent;
+	border-radius: 0px;
+	box-shadow: inset 0px 0px 0px 0px #f0f0f0;
+}
+
+::-webkit-scrollbar-corner {
+	background: transparent;
+}

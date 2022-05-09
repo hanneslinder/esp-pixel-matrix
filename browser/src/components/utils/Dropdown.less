@@ -1,0 +1,49 @@
+.dropdown {
+	--dropdown-width: 100px;
+
+	position: relative;
+	width: var(--dropdown-width);
+
+	&.is-open {
+		.dropdown-list {
+			display: block;
+		}
+	}
+
+	.dropdown-selected {
+		background: var(--color-dark-1);
+		padding: 5px 10px;
+		width: var(--dropdown-width);
+		box-sizing: border-box;
+		cursor: pointer;
+		display: flex;
+		justify-content: space-between;
+
+		.svg-icon svg {
+			width: 12px;
+		}
+
+		&:hover {
+			background: var(--color-highlight-1);
+		}
+	}
+
+	.dropdown-item {
+		padding: 5px 10px;
+		cursor: pointer;
+
+		&:hover {
+			background: var(--color-highlight-1);
+		}
+	}
+
+	.dropdown-list {
+		width: var(--dropdown-width);
+		position: absolute;
+		top: 31px;
+		right: 0;
+		display: none;
+		z-index: 100;
+		background: var(--color-dark-1);
+	}
+}

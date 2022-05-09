@@ -1,0 +1,38 @@
+.expandable-section {
+	display: flex;
+	flex-grow: 1;
+	flex-direction: column;
+
+	.expandable {
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		border: none;
+		outline: none;
+		margin-bottom: 20px;
+		transition: background-color 0.3s ease;
+
+		> .svg-icon {
+			transform: rotate(-90deg);
+		}
+
+		.rotate.svg-icon {
+			transform: rotate(0deg);
+		}
+	}
+
+	.expandable-title {
+		margin: 0;
+		flex-grow: 1;
+	}
+
+	.expandable-icon {
+		margin-left: auto;
+		transition: transform 0.6s ease;
+	}
+
+	.expandable-content {
+		overflow: hidden;
+		transition: max-height 0.6s ease;
+	}
+}

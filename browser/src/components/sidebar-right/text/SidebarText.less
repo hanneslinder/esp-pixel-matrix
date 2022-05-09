@@ -1,0 +1,106 @@
+.sidebar-text {
+	margin: 0 20px;
+
+	.settings-item {
+		border-bottom: 1px solid var(--color-dark-3);
+		padding-bottom: 20px;
+	}
+
+	.icon-text-help {
+		margin-left: 10px;
+		opacity: 0.5;
+		cursor: pointer;
+		transition: opacity 0.3s ease;
+
+		svg {
+			width: 14px;
+		}
+
+		&:hover {
+			opacity: 1;
+		}
+	}
+
+	.offset-buttons {
+		flex-grow: 0;
+		flex-basis: 40px;
+		display: flex;
+		margin-left: 20px;
+
+		.offset-icon {
+			flex-grow: 0;
+			width: 30px;
+			height: 30px;
+			user-select: none;
+			display: flex;
+			justify-content: center;
+			align-content: center;
+			background: var(--color-dark-1);
+			cursor: pointer;
+			align-items: center;
+
+			&:hover {
+				background: var(--color-highlight-1);
+			}
+
+			&.is-disabled {
+				opacity: 0.5;
+				pointer-events: none;
+			}
+
+			&.decrement {
+				border-top-left-radius: 2px;
+				border-bottom-left-radius: 2px;
+				border-right: 1px solid var(--color-text-2);
+			}
+
+			&.increment {
+				border-top-right-radius: 2px;
+				border-bottom-right-radius: 2px;
+			}
+		}
+	}
+
+	.settings-color {
+		.expandable-children {
+			padding: 20px;
+		}
+
+		.expandable-icon {
+			width: 0px;
+			overflow: hidden;
+			transition: width 0.6s ease;
+		}
+
+		.expandable.is-expanded {
+			.expandable-icon {
+				width: 20px;
+			}
+
+			.color-picker-preview {
+				margin-right: 20px;
+			}
+		}
+
+		.color-picker-preview {
+			width: 40px;
+			height: 20px;
+			margin-right: 0px;
+			transition: margin 0.6s ease;
+		}
+	}
+
+	.btn-add-text {
+		display: flex;
+		justify-content: center;
+		margin-top: 20px;
+		margin-bottom: 50px;
+	}
+
+	.btn-delete-text {
+		display: flex;
+		justify-content: flex-end;
+		margin-bottom: 20px;
+		margin-top: -30px;
+	}
+}
