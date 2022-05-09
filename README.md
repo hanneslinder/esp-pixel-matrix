@@ -10,10 +10,9 @@
 ### web app
 - install dependencies with `npm i`
 - rename `config.example.ts` file to `config.ts`
-- `npm run debug` for local development
+- `npm run debug` for local development 
+- For local development: Update esp32 IP adress in `webpack.config.dev.js`
 - `npm run build` to build the project
-
-Update esp32 ip adress in `webpack.config.dev.js` to point to your esp32
 
 You should now be able to navigate to `localhost:8080` in your browser. If the ESP32 is already setup and running you should be able to control the matrix now.
 
@@ -26,7 +25,19 @@ The esp32 code uses [platformIO](https://platformio.org/)
 - take contents of `browser/dist` folder and copy into `esp32/data` directory. 
 - copy data onto esp32 via platformIO `build file system image` and `upload file system image`. 
 
-Once power is connected, the ESP32 creates a WIFI hotspot and displays the connection settings on the matrix. Connect to this network and use the WIFI portal to configure your WIFI settings. The ESP32 then reboots and trys to connect to the configured WIFI. On subsequent reboots, the matrix will show its IP address for 10 seconds before switching to its regular mode.
+When power is connected, the ESP32 creates a WIFI hotspot and displays the connection settings on the matrix. Connect to this network and use the WIFI portal to configure your WIFI settings. The ESP32 then reboots and trys to connect to the configured WIFI. On subsequent reboots, the matrix will show its IP address for 10 seconds before switching to its regular mode.
+
+### OTA updates
+Once the matrix is up and running you can update the web app and the ESP32 code via OTA updates. 
+In the `settings` section of the web interface there is an upload form for OTA update data. This form expects 2 files to be uploaded: 
+`spiffs.bin` and `firmware.bin`
+
+`spiffs.bin`: contains the web app and can be build via platformIO -> `Build File System Image`
+`firmware.bin`: contains the esp32 code and can be build via platformIO -> `Build`
+
+The output of both commands sould be located in the `.pio/build/wemos_d1_mini32` folder (`wemos_d1_mini32` might be different if you use another device as build target)
+
+Just upload both files in the web UI. After successful upload the device reboots itself and should have the new code. In theory there should be a rollback mechanism for botched updates included but I've not tried this. So best to not unplug the power while flashing a new firmware :) 
 
 ### wire up 
 
