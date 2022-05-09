@@ -26,6 +26,8 @@ The esp32 code uses [platformIO](https://platformio.org/)
 - take contents of `browser/dist` folder and copy into `esp32/data` directory. 
 - copy data onto esp32 via platformIO `build file system image` and `upload file system image`. 
 
+Once power is connected, the ESP32 creates a WIFI hotspot and displays the connection settings on the matrix. Connect to this network and use the WIFI portal to configure your WIFI settings. The ESP32 then reboots and trys to connect to the configured WIFI. On subsequent reboots, the matrix will show its IP address for 10 seconds before switching to its regular mode.
+
 ### wire up 
 
 This project uses the excellent https://github.com/mrfaptastic/ESP32-HUB75-MatrixPanel-I2S-DMA library. If you are unsure how to connect, there is a nice connection guide there. 
@@ -46,3 +48,10 @@ In short:
 ```
 
 There is also a Gerber file located in the `hardware` folder for a simple PCB to simplify the connection.
+
+### print the case
+
+You can find `STL` and `STEP` files for the case inside the `hardware` folder.
+The case should fit a standard 64x32 pixel p3 led matrix.
+I've designed the case to use M3 threaded inserts for all screw holes. 
+For power I've used a micro usb breakout board like this one: https://www.amazon.de/WayinTop-Breakout-Konverter-Netzteil-Steckbrett/dp/B07W13X3TD/ref=sr_1_3?__mk_de_DE=%C3%85M%C3%85%C5%BD%C3%95%C3%91&crid=3BRR55R6O73B7&keywords=usb+power+breakout&qid=1652083140&sprefix=usb+power+breakout%2Caps%2C88&sr=8-3
