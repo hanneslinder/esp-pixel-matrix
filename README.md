@@ -10,6 +10,7 @@
 ### web app
 - install dependencies with `npm i`
 - `npm run debug` for local development
+- Rename `config.example.ts` to `config.ts` and replace values
 - `npm run build` to build the project
 
 Update esp32 ip adress in `webpack.config.dev.js` to point to your esp32
