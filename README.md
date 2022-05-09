@@ -9,11 +9,13 @@
 
 ### web app
 - install dependencies with `npm i`
+- rename `config.example.ts` file to `config.ts`
 - `npm run debug` for local development
-- Rename `config.example.ts` to `config.ts` and replace values
 - `npm run build` to build the project
 
 Update esp32 ip adress in `webpack.config.dev.js` to point to your esp32
+
+You should now be able to navigate to `localhost:8080` in your browser. If the ESP32 is already setup and running you should be able to control the matrix now.
 
 ### ESP-32
 
