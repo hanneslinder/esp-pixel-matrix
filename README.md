@@ -5,7 +5,7 @@
 ![2022-05-09_09-10](https://user-images.githubusercontent.com/3353071/167358409-bda87fc2-24e8-4b76-ae95-3840c33580ec.png)
 
 
-## setup
+## Setup
 
 ### web app
 - install dependencies with `npm i`
@@ -47,7 +47,7 @@ In short:
 +----------+
 ```
 
-There is also a Gerber file located in the `hardware` folder for a simple PCB to simplify the connection.
+There is also a Gerber file located in the `hardware` folder for a PCB to simplify the connection.
 
 ### print the case
 
