@@ -1,4 +1,9 @@
-# led-matrix clock
+# ESP-32 Pixel Matrix
+![20220120_125157](https://user-images.githubusercontent.com/3353071/167358525-23218d44-c39b-4bd0-a9f9-8234161531a9.jpeg)
+
+
+![2022-05-09_09-10](https://user-images.githubusercontent.com/3353071/167358409-bda87fc2-24e8-4b76-ae95-3840c33580ec.png)
+
 
 ## setup
 
@@ -9,7 +14,7 @@
 
 Update esp32 ip adress in `webpack.config.dev.js` to point to your esp32
 
-### es32
+### ESP-32
 
 The esp32 code uses [platformIO](https://platformio.org/)
 
