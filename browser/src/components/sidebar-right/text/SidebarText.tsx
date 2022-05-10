@@ -1,5 +1,5 @@
 import { view } from "@risingstack/react-easy-state";
-import React, { ChangeEvent } from "react";
+import React, { ChangeEvent, useRef } from "react";
 import { setCompositionModeAction, setTextAction } from "../../../Actions";
 import { appState, TextAlign, TextOptions } from "../../../state/appState";
 import { SvgIcon } from "../../utils/SvgIcon";
@@ -18,6 +18,8 @@ const blendModeIcons = [iconBlendMode1, iconBlendMode2, iconBlendMode3];
 interface Props {}
 
 export const SidebarText: React.FC<Props> = view(() => {
+	const expandableRefs = useRef({} as any);
+
 	const setCompositionMode = () => {
 		const currentMode = appState.settings.compositionMode;
 		let newMode = currentMode + 1;
@@ -26,8 +28,8 @@ export const SidebarText: React.FC<Props> = view(() => {
 
 	const renderTextSettings = () => {
 		return appState.text.map((text, i) => (
-			<Expandable title={`Text ${i + 1}`} initialOpen={true} key={text.id}>
-				<TextOptionsControl settings={text} />
+			<Expandable title={`Text ${i + 1}`} initialOpen={true} key={i} ref={(ref: any) => expandableRefs.current[i] = ref} >
+				<TextOptionsControl settings={text} onResize={() => expandableRefs.current[i].updateHeight()} />
 			</Expandable>
 		));
 	};

@@ -19,12 +19,13 @@ const textAlignItems: DropdownItem[] = [
 
 interface Props {
 	settings: TextOptions;
+	onResize?: () => void;
 }
 
 let colorChangeTimeout: ReturnType<typeof setTimeout>;
 const COLORPICKER_TIMEOUT = 300;
 
-export const TextOptionsControl: React.FC<Props> = view(({ settings }) => {
+export const TextOptionsControl: React.FC<Props> = view(({ settings, onResize }) => {
 	const onTextChange = (text: string) => {
 		const newSettings = { ...settings, text };
 		updateTextItem(newSettings);
@@ -74,6 +75,12 @@ export const TextOptionsControl: React.FC<Props> = view(({ settings }) => {
 			setTextAction();
 		}
 	};
+
+	const updateHeightOnAnimationEnd = () => {
+		setTimeout( () => {
+			onResize();
+		}, 350);
+	}
 
 	const clorpickerPreview = <div className="color-picker-preview" style={{ background: settings.color }} />;
 
@@ -160,7 +167,7 @@ export const TextOptionsControl: React.FC<Props> = view(({ settings }) => {
 				</div>
 			</div>
 			<div className="sidebar-settings-item settings-color">
-				<Expandable title="Color" initialOpen={true} titleElement={clorpickerPreview}>
+				<Expandable title="Color" initialOpen={false} titleElement={clorpickerPreview} onExpand={updateHeightOnAnimationEnd}>
 					<HexColorPicker color={settings.color} onChange={(color) => onColorChange(color)} />
 				</Expandable>
 			</div>

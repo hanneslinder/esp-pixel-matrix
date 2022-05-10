@@ -16,14 +16,15 @@ interface Props {
 	getCanvas: () => Canvas;
 }
 
+// Sync settings from esp32 back to app
+const onRemoteStateReceived = (state: StateFromRemote) => {
+	Object.keys(state).forEach((key: keyof StateFromRemote) => {
+		(appState[key] as any) = state[key];
+	});
+};
+
 export const SidebarSettings: React.FC<Props> = view(({ getCanvas }) => {
 	let unsubscribeFromStateMessage: () => void;
-
-	const onRemoteStateReceived = (state: StateFromRemote) => {
-		Object.keys(state).forEach((key: keyof StateFromRemote) => {
-			(appState[key] as any) = state[key];
-		});
-	};
 
 	const getRemoteState = () => {
 		getPixelsAction();

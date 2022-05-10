@@ -279,14 +279,16 @@ void sendState() {
   doc["locale"] = locale;
 
   for (TextItem t : textContent) {
-    JsonObject textObject = textArray.createNestedObject();
-    textObject["text"] = t.text;
-    textObject["line"] = t.line;
-    textObject["offsetX"] = t.offsetX;
-    textObject["offsetY"] = t.offsetY;
-    textObject["size"] = t.size;
-    textObject["align"] = t.align;
-    textObject["color"] = convert16BitTo32BitHexColor(t.color);
+    if (strcmp(t.text, "") != 0) {
+      JsonObject textObject = textArray.createNestedObject();
+      textObject["text"] = t.text;
+      textObject["line"] = t.line;
+      textObject["offsetX"] = t.offsetX;
+      textObject["offsetY"] = t.offsetY;
+      textObject["size"] = t.size;
+      textObject["align"] = t.align;
+      textObject["color"] = convert16BitTo32BitHexColor(t.color);
+    }
   }
 
 	String json;

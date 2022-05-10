@@ -11,6 +11,7 @@ interface Props {
 	titleElement?: JSX.Element;
 	className?: string;
 	onExpand?: (isExpanded: boolean) => void;
+	ref?: any;
 }
 
 export const Expandable: React.FC<Props> = forwardRef(({ initialOpen, title, children, titleElement, className, onExpand }, ref) => {
@@ -25,8 +26,7 @@ export const Expandable: React.FC<Props> = forwardRef(({ initialOpen, title, chi
 	}, [active, height]);
 
 	useImperativeHandle(ref, () => ({
-		updateHeight() {
-			console.log("Update height");
+		updateHeight: () => {
 			setHeight(content.current.scrollHeight);
 		},
 	}));
