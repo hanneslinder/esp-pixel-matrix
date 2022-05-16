@@ -49,18 +49,6 @@ export class Canvas {
 		this.canvas.addEventListener("mousemove", this.onCanvasMouseMove);
 	}
 
-	// private restorePixelData(): void {
-	// 	const pixelData = getStoredPixelData();
-
-	// 	if (pixelData) {
-	// 		pixelData.forEach((d: any) => {
-	// 			this.drawPixel(d.p[0] * 10, d.p[1] * 10, d.c);
-	// 		});
-
-	// 		this.sendPixels();
-	// 	}
-	// }
-
 	private readonly onCanvasMouseDown = (evt: MouseEvent): void => {
 		if (appState.tools.selected === Tools.GRADIENT) {
 			const { x, y } = this.getCoords(evt.clientX, evt.clientY);

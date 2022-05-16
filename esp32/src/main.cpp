@@ -266,7 +266,7 @@ String convert16BitTo32BitHexColor(uint16_t hexValue) {
 }
 
 void sendState() {
-	StaticJsonDocument<768> doc;
+	StaticJsonDocument<1024> doc;
   JsonArray textArray = doc.createNestedArray("text");
 
   doc["action"] = "matrixSettings";

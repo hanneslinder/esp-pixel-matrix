@@ -23,7 +23,7 @@ interface Props {
 }
 
 let colorChangeTimeout: ReturnType<typeof setTimeout>;
-const COLORPICKER_TIMEOUT = 300;
+const COLORPICKER_TIMEOUT_MS = 350;
 
 export const TextOptionsControl: React.FC<Props> = view(({ settings, onResize }) => {
 	const onTextChange = (text: string) => {
@@ -49,7 +49,6 @@ export const TextOptionsControl: React.FC<Props> = view(({ settings, onResize })
 	};
 
 	const onAlignChange = (align: TextAlign) => {
-		console.log(align);
 		const newSettings = { ...settings, align };
 		updateTextItem(newSettings);
 	};
@@ -59,16 +58,16 @@ export const TextOptionsControl: React.FC<Props> = view(({ settings, onResize })
 		colorChangeTimeout = setTimeout(() => {
 			const newSettings = { ...settings, color };
 			updateTextItem(newSettings);
-		}, COLORPICKER_TIMEOUT);
+		}, COLORPICKER_TIMEOUT_MS);
 	};
 
-	const removeTextItem = (id: string) => {
-		appState.text = appState.text.filter((t) => t.id !== id);
+	const removeTextItem = (line: number) => {
+		appState.text = appState.text.filter((t) => t.line !== line);
 		setTextAction();
 	};
 
 	const updateTextItem = (newText: TextOptions) => {
-		const index = appState.text.findIndex((t) => t.id === newText.id);
+		const index = appState.text.findIndex((t) => t.line === newText.line);
 
 		if (index > -1) {
 			appState.text[index] = newText;
@@ -79,7 +78,7 @@ export const TextOptionsControl: React.FC<Props> = view(({ settings, onResize })
 	const updateHeightOnAnimationEnd = () => {
 		setTimeout( () => {
 			onResize();
-		}, 350);
+		}, COLORPICKER_TIMEOUT_MS);
 	}
 
 	const clorpickerPreview = <div className="color-picker-preview" style={{ background: settings.color }} />;
@@ -172,7 +171,7 @@ export const TextOptionsControl: React.FC<Props> = view(({ settings, onResize })
 				</Expandable>
 			</div>
 			<div className="btn-delete-text">
-				<button onClick={() => removeTextItem(settings.id)}>delete</button>
+				<button onClick={() => removeTextItem(settings.line)}>delete</button>
 			</div>
 		</div>
 	);

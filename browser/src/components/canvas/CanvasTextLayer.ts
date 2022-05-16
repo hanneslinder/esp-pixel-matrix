@@ -3,6 +3,7 @@ import { observe } from "@nx-js/observer-util";
 import { appState, TextAlign } from "../../state/appState";
 import { strftime } from "../../utils/time";
 import { getWidth, renderText } from "./TextRenderer";
+// import { getWidth, renderText } from "./TextRendererV2";
 
 export class CanvasTextLayer {
 	private ctx: CanvasRenderingContext2D;
@@ -48,7 +49,7 @@ export class CanvasTextLayer {
 
 			const yVal = text.line === 1 ? 5 : 23;
 
-			renderText(this.ctx, value, text.color, xVal + text.offsetX, yVal + text.offsetY, text.size);
+			renderText(this.ctx, value, text.color, Math.round(xVal + text.offsetX), Math.round(yVal + text.offsetY), text.size);
 		});
 	};
 

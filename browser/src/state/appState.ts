@@ -2,7 +2,6 @@ import { store } from "@risingstack/react-easy-state";
 import { SidebarLeftItem } from "../components/sidebar-left/SidebarLeft";
 import { Tools } from "../components/sidebar-right/SidebarRight";
 import { getSavedItemsFromLocalStorage, SavedItem } from "../utils/storage";
-import { uuidv4 } from "../utils/utils";
 
 export interface Settings {
 	brightness: number;
@@ -53,7 +52,6 @@ export interface TextOptions {
 	offsetX: number;
 	offsetY: number;
 	size: number;
-	id: string;
 }
 
 export interface CustomDataOptions {
@@ -91,7 +89,6 @@ const getInitialState = (): AppState => ({
 			align: TextAlign.CENTER,
 			offsetX: 1,
 			offsetY: -3,
-			id: uuidv4(),
 		},
 		{
 			color: "#ffffff",
@@ -101,7 +98,6 @@ const getInitialState = (): AppState => ({
 			align: TextAlign.CENTER,
 			offsetX: 3,
 			offsetY: 1,
-			id: uuidv4(),
 		},
 	],
 	settings: {

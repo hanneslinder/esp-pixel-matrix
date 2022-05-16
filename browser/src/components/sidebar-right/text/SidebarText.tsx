@@ -1,12 +1,11 @@
 import { view } from "@risingstack/react-easy-state";
-import React, { ChangeEvent, useRef } from "react";
+import React, { useRef } from "react";
 import { setCompositionModeAction, setTextAction } from "../../../Actions";
 import { appState, TextAlign, TextOptions } from "../../../state/appState";
 import { SvgIcon } from "../../utils/SvgIcon";
 import { TextOptionsControl } from "./TextOptionsControl";
 
 import "./SidebarText.less";
-import { uuidv4 } from "../../../utils/utils";
 import { Expandable } from "../../utils/Expandable";
 
 const iconBlendMode1 = require("../../../assets/blend3.svg");
@@ -28,23 +27,21 @@ export const SidebarText: React.FC<Props> = view(() => {
 
 	const renderTextSettings = () => {
 		return appState.text.map((text, i) => (
-			<Expandable title={`Text ${i + 1}`} initialOpen={true} key={i} ref={(ref: any) => expandableRefs.current[i] = ref} >
+			<Expandable title={`Text ${i + 1}`} initialOpen={true} key={`${i}-${text.line}`} ref={(ref: any) => expandableRefs.current[i] = ref} >
 				<TextOptionsControl settings={text} onResize={() => expandableRefs.current[i].updateHeight()} />
 			</Expandable>
 		));
 	};
 
 	const addTextItem = () => {
-		const line = 1;
 		const textItem: TextOptions = {
 			align: TextAlign.CENTER,
 			color: "#ffffff",
 			text: "",
 			size: 1,
-			line,
+			line: appState.text.length + 1,
 			offsetX: 3,
 			offsetY: 1,
-			id: uuidv4(),
 		};
 
 		appState.text.push(textItem);

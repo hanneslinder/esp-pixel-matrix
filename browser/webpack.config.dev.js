@@ -20,7 +20,7 @@ module.exports = merge(commonConfig, {
 		new HtmlWebpackPlugin({
 			template: "index.ejs",
 			templateParameters: {
-				websocket: "192.168.178.41", // change to your esp32 ip address
+				websocket: "192.168.178.63", // change to your esp32 ip address
 			},
 		}),
 	],

@@ -9,3 +9,4 @@ dist/
 .DS_STORE
 
 esp32/data/*
+release/
