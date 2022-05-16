@@ -27,7 +27,12 @@ export const SidebarText: React.FC<Props> = view(() => {
 
 	const renderTextSettings = () => {
 		return appState.text.map((text, i) => (
-			<Expandable title={`Text ${i + 1}`} initialOpen={true} key={`${i}-${text.line}`} ref={(ref: any) => expandableRefs.current[i] = ref} >
+			<Expandable
+				title={`Text ${i + 1}`}
+				initialOpen={true}
+				key={`${i}-${text.line}`}
+				ref={(ref: any) => (expandableRefs.current[i] = ref)}
+			>
 				<TextOptionsControl settings={text} onResize={() => expandableRefs.current[i].updateHeight()} />
 			</Expandable>
 		));

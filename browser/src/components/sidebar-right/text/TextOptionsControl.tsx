@@ -76,10 +76,10 @@ export const TextOptionsControl: React.FC<Props> = view(({ settings, onResize })
 	};
 
 	const updateHeightOnAnimationEnd = () => {
-		setTimeout( () => {
+		setTimeout(() => {
 			onResize();
 		}, COLORPICKER_TIMEOUT_MS);
-	}
+	};
 
 	const clorpickerPreview = <div className="color-picker-preview" style={{ background: settings.color }} />;
 

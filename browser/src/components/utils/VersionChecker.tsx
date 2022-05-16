@@ -16,7 +16,7 @@ const getDownloadUrl = () => {
 	} else {
 		return config.updates.downloadUrl;
 	}
-}
+};
 
 export const VersionChecker: React.FC<Props> = () => {
 	const [didUpdateCheck, setUpdateCheck] = useState(false);
@@ -46,7 +46,9 @@ export const VersionChecker: React.FC<Props> = () => {
 
 	return (
 		<div className="version-checker">
-			{newVersionAvailable && <a className="new-version" href={getDownloadUrl()} target="_blank">{`New Version ${versionNumber} available!`}</a>}
+			{newVersionAvailable && (
+				<a className="new-version" href={getDownloadUrl()} target="_blank">{`New Version ${versionNumber} available!`}</a>
+			)}
 			{!newVersionAvailable && <div>{`version ${versionNumber}`}</div>}
 			{!didUpdateCheck && <Loader />}
 		</div>
