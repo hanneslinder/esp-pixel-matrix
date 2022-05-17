@@ -1,11 +1,7 @@
-// Based on https://github.com/tchapi/Adafruit-GFX-Font-Customiser
+// Rendering with help from https://github.com/tchapi/Adafruit-GFX-Font-Customiser
 
-import { font } from "../../assets/font";
 import { bitmaps, glyphs, metaData } from "../../assets/fonts/pico";
 import { appState } from "../../state/appState";
-
-const fontWidth = 5;
-const fontHeight = 6;
 
 const fontInfo = {
 	firstChar: 0,
@@ -16,29 +12,30 @@ const fontInfo = {
 	underBaseLine: 0,
 };
 
-export const getWidth = (text: string, textSize = 1) => {
-	// Character width + space width
-	return text.length * fontWidth * textSize + (text.length - 1) * textSize;
+export const getWidth = (text: string, size = 1) => {
+	const width = text.split("").reduce((prev, current) => prev + getGlyph(current)[1], 0);
+	const totalWidth = (width + text.length - 1) * size; // total width of all characters + blank space between * size
+
+	return totalWidth;
 };
 
-export const renderText = (ctx: CanvasRenderingContext2D, text: string, color: string, posX: number, posY: number, textSize = 1) => {
+export const renderText = (ctx: CanvasRenderingContext2D, text: string, color: string, posX: number, posY: number, size = 1) => {
 	initFont();
 
 	ctx.fillStyle = color;
 
-	let offsetX = posX;
-	let offsetY = posY;
+	let offsetX = posX / size;
+	let offsetY = posY / size;
 	text.split("").forEach((t) => {
-		const letterWidth = renderLetter(ctx, t, offsetX, offsetY);
+		const letterWidth = renderLetter(ctx, t, offsetX, offsetY, size);
 		offsetX += letterWidth;
 	});
 };
 
-function renderLetter(ctx: CanvasRenderingContext2D, letter: string, offsetX: number, offsetY: number) {
+function renderLetter(ctx: CanvasRenderingContext2D, letter: string, offsetX: number, offsetY: number, size: number) {
 	let nextOffsetX = 0;
 
 	glyphs.forEach((g, i) => {
-		// find desired character in glyphs array
 		const char = String.fromCharCode(fontInfo.firstChar + i);
 
 		if (char === letter) {
@@ -68,7 +65,7 @@ function renderLetter(ctx: CanvasRenderingContext2D, letter: string, offsetX: nu
 			}
 
 			nextOffsetX = w + 1;
-			drawGlyphPixels(ctx, pixels, w, h, char, adv, ow, oh, offsetX, offsetY, disabled);
+			drawGlyphPixels(ctx, pixels, w, h, adv, ow, oh, offsetX, offsetY, size);
 		}
 	});
 
@@ -80,13 +77,12 @@ function drawGlyphPixels(
 	pixels: string,
 	w: number,
 	h: number,
-	char: string,
 	adv: number,
 	ow: number,
 	oh: number,
 	offsetX: number,
 	offsetY: number,
-	disabled: boolean
+	size: number
 ) {
 	const ratio = appState.matrix.pixelRatio;
 	const left = ow;
@@ -99,7 +95,15 @@ function drawGlyphPixels(
 			if (y < top || y >= bottom || x < left || x >= right) {
 				// do nothing
 			} else if (pixels.charAt((y - top) * w + (x - left)) === "1") {
-				ctx.fillRect(offsetX * ratio + x * ratio, offsetY * ratio + y * ratio, ratio - 1, ratio - 1);
+
+				// adjust font size
+				for (let pixelX = 0; pixelX < size; pixelX++) {
+					for (let pixelY = 0; pixelY < size; pixelY++) {
+						const posX = offsetX * ratio * size + x * ratio * size + ratio * pixelX;
+						const posY = offsetY * ratio * size + y * ratio * size + ratio * pixelY;
+						ctx.fillRect(posX, posY, ratio - 1, ratio - 1);
+					}
+				}
 			}
 		}
 	}
@@ -118,4 +122,11 @@ function initFont() {
 	});
 
 	fontInfo.maxHeight = fontInfo.baseLine + 1 - fontInfo.underBaseLine;
+}
+
+function getGlyph(letter: string) {
+	return glyphs.find((_g, i) => {
+		const char = String.fromCharCode(fontInfo.firstChar + i);
+		return char === letter;
+	});
 }
