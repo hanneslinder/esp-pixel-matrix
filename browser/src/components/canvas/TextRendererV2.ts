@@ -13,10 +13,10 @@ const fontInfo = {
 };
 
 export const getWidth = (text: string, size = 1) => {
-	const width = text.split("").reduce((prev, current) => prev + getGlyph(current)[1], 0);
-	const totalWidth = (width + text.length - 1) * size; // total width of all characters + blank space between * size
+	let width = 0;
+	text.split("").forEach(t => width += getGlyph(t)[1]);
 
-	return totalWidth;
+	return (width + text.length - 1) * size; // total width of all characters + blank space between * size
 };
 
 export const renderText = (ctx: CanvasRenderingContext2D, text: string, color: string, posX: number, posY: number, size = 1) => {
@@ -125,6 +125,7 @@ function initFont() {
 }
 
 function getGlyph(letter: string) {
+	console.log("Get glyph", letter);
 	return glyphs.find((_g, i) => {
 		const char = String.fromCharCode(fontInfo.firstChar + i);
 		return char === letter;

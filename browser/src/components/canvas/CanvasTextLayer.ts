@@ -1,9 +1,9 @@
 import { observe } from "@nx-js/observer-util";
 
-import { appState, TextAlign } from "../../state/appState";
+import { appState, Font, TextAlign } from "../../state/appState";
 import { strftime } from "../../utils/time";
-import { getWidth, renderText } from "./TextRenderer";
-// import { getWidth, renderText } from "./TextRendererV2";
+import * as DefaultTextRenderer from "./TextRenderer";
+import * as V2TextRenderer from "./TextRendererV2";
 
 export class CanvasTextLayer {
 	private ctx: CanvasRenderingContext2D;
@@ -28,28 +28,30 @@ export class CanvasTextLayer {
 		observe(() => {
 			this.reset();
 			clearInterval(this.updateTimeInterval);
-			this.updateTime();
-			this.updateTimeInterval = setInterval(this.updateTime, 1000);
+			this.updateText();
+			// this.updateTimeInterval = setInterval(this.updateTime, 1000);
 		});
 	}
 
-	private readonly updateTime = () => {
+	private readonly updateText = () => {
 		this.reset();
+
 		appState.text.forEach((text) => {
+			const renderFunction = text.font === Font.REGULAR ? DefaultTextRenderer.renderText : V2TextRenderer.renderText;
+			const widthFunction = text.font === Font.REGULAR ? DefaultTextRenderer.getWidth : V2TextRenderer.getWidth;
+			
 			const value = strftime(text.text, new Date());
-			const width = getWidth(value, text.size);
+			const width = widthFunction(value, text.size);
+			const yVal = text.line === 1 ? 5 : 23;
 
 			let xVal = 0;
-
 			if (text.align === TextAlign.CENTER) {
 				xVal = (appState.matrix.width - width) / 2;
 			} else if (text.align === TextAlign.RIGHT) {
 				xVal = appState.matrix.width - width;
 			}
 
-			const yVal = text.line === 1 ? 5 : 23;
-
-			renderText(this.ctx, value, text.color, Math.round(xVal + text.offsetX), Math.round(yVal + text.offsetY), text.size);
+			renderFunction(this.ctx, value, text.color, Math.round(xVal + text.offsetX), Math.round(yVal + text.offsetY), text.size);
 		});
 	};
 

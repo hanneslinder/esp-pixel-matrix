@@ -2,7 +2,7 @@ import { view } from "@risingstack/react-easy-state";
 import React from "react";
 import { HexColorPicker } from "react-colorful";
 import { setTextAction } from "../../../Actions";
-import { appState, TextAlign, TextOptions } from "../../../state/appState";
+import { appState, Font, TextAlign, TextOptions } from "../../../state/appState";
 import { limitNumberBetween } from "../../../utils/utils";
 import { Dropdown, DropdownItem } from "../../utils/DropDown";
 import { Expandable } from "../../utils/Expandable";
@@ -15,6 +15,11 @@ const textAlignItems: DropdownItem[] = [
 	{ label: "Left", value: TextAlign.LEFT },
 	{ label: "Center", value: TextAlign.CENTER },
 	{ label: "Right", value: TextAlign.RIGHT },
+];
+
+const fontItems: DropdownItem[] = [
+	{ label: "Regular", value: Font.REGULAR },
+	{ label: "Pico", value: Font.PICO },
 ];
 
 interface Props {
@@ -47,6 +52,11 @@ export const TextOptionsControl: React.FC<Props> = view(({ settings, onResize })
 		const newSettings = { ...settings, size };
 		updateTextItem(newSettings);
 	};
+
+	const onFontChange = (font: Font) => {
+		const newSettings = { ...settings, font };
+		updateTextItem(newSettings);
+	}
 
 	const onAlignChange = (align: TextAlign) => {
 		const newSettings = { ...settings, align };
@@ -83,6 +93,8 @@ export const TextOptionsControl: React.FC<Props> = view(({ settings, onResize })
 
 	const clorpickerPreview = <div className="color-picker-preview" style={{ background: settings.color }} />;
 
+	console.log(settings);
+
 	return (
 		<div className="sidebar-settings-section">
 			<div className="sidebar-settings-item">
@@ -97,6 +109,12 @@ export const TextOptionsControl: React.FC<Props> = view(({ settings, onResize })
 				</div>
 				<div className="sidebar-settings-input">
 					<input type="text" value={settings.text} onChange={(e) => onTextChange(e.target.value)} />
+				</div>
+			</div>
+			<div className="sidebar-settings-item">
+				<div className="sidebar-settings-label">Font</div>
+				<div className="sidebar-settings-input">
+					<Dropdown selected={settings.font} items={fontItems} onSelect={onFontChange} />
 				</div>
 			</div>
 			<div className="sidebar-settings-item">

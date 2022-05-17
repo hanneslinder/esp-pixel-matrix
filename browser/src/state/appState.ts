@@ -44,6 +44,11 @@ export enum TextAlign {
 	RIGHT,
 }
 
+export enum Font {
+	REGULAR,
+	PICO,
+}
+
 export interface TextOptions {
 	color: string;
 	text: string;
@@ -52,6 +57,7 @@ export interface TextOptions {
 	offsetX: number;
 	offsetY: number;
 	size: number;
+	font: Font;
 }
 
 export interface CustomDataOptions {
@@ -89,6 +95,7 @@ const getInitialState = (): AppState => ({
 			align: TextAlign.CENTER,
 			offsetX: 1,
 			offsetY: -3,
+			font: Font.REGULAR,
 		},
 		{
 			color: "#ffffff",
@@ -98,6 +105,7 @@ const getInitialState = (): AppState => ({
 			align: TextAlign.CENTER,
 			offsetX: 3,
 			offsetY: 1,
+			font: Font.REGULAR,
 		},
 	],
 	settings: {

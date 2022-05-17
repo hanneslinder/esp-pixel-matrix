@@ -1,7 +1,7 @@
 import { view } from "@risingstack/react-easy-state";
 import React, { useRef } from "react";
 import { setCompositionModeAction, setTextAction } from "../../../Actions";
-import { appState, TextAlign, TextOptions } from "../../../state/appState";
+import { appState, Font, TextAlign, TextOptions } from "../../../state/appState";
 import { SvgIcon } from "../../utils/SvgIcon";
 import { TextOptionsControl } from "./TextOptionsControl";
 
@@ -47,6 +47,7 @@ export const SidebarText: React.FC<Props> = view(() => {
 			line: appState.text.length + 1,
 			offsetX: 3,
 			offsetY: 1,
+			font: Font.REGULAR,
 		};
 
 		appState.text.push(textItem);
