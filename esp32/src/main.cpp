@@ -693,11 +693,12 @@ void loop() {
   if (startupFinished == false) {
     const String ip = WiFi.localIP().toString();
 
+    // Cannot use text layer here as we have a `delay` that blocks the rendering
     matrix.clearScreen();
-    matrix.setTextSize(1);
-    matrix.setCursor(3, 2);
+    matrix.setFont(&Picopixel);
+    matrix.setCursor(9, 13);
     matrix.print(ip);
-
+  
     delay(6000);
 
     startupFinished = true;
