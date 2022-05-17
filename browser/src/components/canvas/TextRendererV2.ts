@@ -25,16 +25,16 @@ export const renderText = (ctx: CanvasRenderingContext2D, text: string, color: s
 	initFont();
 
 	ctx.fillStyle = color;
-	ctx.translate(posX, posY);
 
-	let offsetX = 0;
+	let offsetX = posX;
+	let offsetY = posY;
 	text.split("").forEach((t) => {
-		const letterWidth = renderLetter(ctx, t, offsetX);
+		const letterWidth = renderLetter(ctx, t, offsetX, offsetY);
 		offsetX += letterWidth;
 	});
 };
 
-function renderLetter(ctx: CanvasRenderingContext2D, letter: string, offsetX: number) {
+function renderLetter(ctx: CanvasRenderingContext2D, letter: string, offsetX: number, offsetY: number) {
 	let nextOffsetX = 0;
 
 	glyphs.forEach((g, i) => {
@@ -68,7 +68,7 @@ function renderLetter(ctx: CanvasRenderingContext2D, letter: string, offsetX: nu
 			}
 
 			nextOffsetX = w + 1;
-			drawGlyphPixels(ctx, pixels, w, h, char, adv, ow, oh, offsetX, disabled);
+			drawGlyphPixels(ctx, pixels, w, h, char, adv, ow, oh, offsetX, offsetY, disabled);
 		}
 	});
 
@@ -85,6 +85,7 @@ function drawGlyphPixels(
 	ow: number,
 	oh: number,
 	offsetX: number,
+	offsetY: number,
 	disabled: boolean
 ) {
 	const ratio = appState.matrix.pixelRatio;
@@ -93,10 +94,12 @@ function drawGlyphPixels(
 	const top = fontInfo.baseLine + oh;
 	const bottom = top + h;
 
-	for (let y = 0; y < h; y++) {
-		for (let x = 0; x < w; x++) {
-			if (pixels.charAt((y - top) * w + (x - left)) === "1") {
-				ctx.fillRect(offsetX * ratio + x * ratio, y * ratio, ratio - 1, ratio - 1);
+	for (let y = 0; y < fontInfo.maxHeight; y++) {
+		for (let x = Math.min(0, ow); x <= Math.max(adv, right); x++) {
+			if (y < top || y >= bottom || x < left || x >= right) {
+				// do nothing
+			} else if (pixels.charAt((y - top) * w + (x - left)) === "1") {
+				ctx.fillRect(offsetX * ratio + x * ratio, offsetY * ratio + y * ratio, ratio - 1, ratio - 1);
 			}
 		}
 	}
