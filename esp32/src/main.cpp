@@ -9,6 +9,8 @@
 #include <WiFiManager.h>
 #include <Wire.h>
 
+#include <Fonts/Picopixel.h>
+
 #include "Layer.h"
 #include "SPIFFS.h"
 #include "time.h"
@@ -91,6 +93,7 @@ struct TextItem {
   uint8_t align;
   uint8_t size;
   uint8_t line;
+  uint8_t font;
 };
 
 TextItem textContent[5] = {
@@ -184,6 +187,7 @@ void setText(JsonArray &text) {
     textContent[index].size = t["size"].as<signed short>();
     textContent[index].align = t["align"].as<signed short>();
     textContent[index].line = t["line"].as<signed short>();
+    textContent[index].font = t["font"].as<signed short>();
     strlcpy(textContent[index].text, t["text"], sizeof textContent[index].text);
 
     const uint16_t c = strtol(t["color"], NULL, 16);
@@ -287,6 +291,7 @@ void sendState() {
       textObject["offsetY"] = t.offsetY;
       textObject["size"] = t.size;
       textObject["align"] = t.align;
+      textObject["font"] = t.font;
       textObject["color"] = convert16BitTo32BitHexColor(t.color);
     }
   }
@@ -501,7 +506,12 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
 
 void printTextItem(char text[], TextItem &t) {
   textPosition pos = static_cast<textPosition>(t.line);
-  textLayer.drawText(text, pos, NULL, t.color, t.size, t.offsetX, t.offsetY, t.align);
+
+  if (t.font == 0) {
+    textLayer.drawText(text, pos, NULL, t.color, t.size, t.offsetX, t.offsetY, t.align);
+  } else {
+    textLayer.drawText(text, pos, &Picopixel, t.color, t.size, t.offsetX, t.offsetY, t.align);
+  }
 }
 
 void printText() {
