@@ -1,6 +1,7 @@
 # ESP-32 Pixel Matrix
 ![20220120_125157](https://user-images.githubusercontent.com/3353071/167358525-23218d44-c39b-4bd0-a9f9-8234161531a9.jpeg)
 
+![20220120_125402](https://github.com/hanneslinder/esp-pixel-matrix/assets/3353071/07281c88-0f26-4d58-a8c8-36cdf4d6948d)
 
 ![2022-05-09_09-10](https://user-images.githubusercontent.com/3353071/167358409-bda87fc2-24e8-4b76-ae95-3840c33580ec.png)
 
