@@ -25,8 +25,8 @@
                 "/Users/hannes/dev/esp-pixel-matrix/esp32/.pio/libdeps/wemos_d1_mini32/Adafruit BusIO",
                 "/Users/hannes/.platformio/packages/framework-arduinoespressif32@3.10006.210326/libraries/SPI/src",
                 "/Users/hannes/.platformio/packages/framework-arduinoespressif32@3.10006.210326/libraries/Wire/src",
-                "/Users/hannes/dev/esp-pixel-matrix/esp32/.pio/libdeps/wemos_d1_mini32/ESP Async WebServer/src",
                 "/Users/hannes/dev/esp-pixel-matrix/esp32/.pio/libdeps/wemos_d1_mini32/ArduinoJson/src",
+                "/Users/hannes/dev/esp-pixel-matrix/esp32/.pio/libdeps/wemos_d1_mini32/ESP Async WebServer/src",
                 "/Users/hannes/.platformio/packages/framework-arduinoespressif32@3.10006.210326/libraries/WiFi/src",
                 "/Users/hannes/.platformio/packages/framework-arduinoespressif32@3.10006.210326/libraries/FS/src",
                 "/Users/hannes/dev/esp-pixel-matrix/esp32/.pio/libdeps/wemos_d1_mini32/AsyncTCP/src",
@@ -110,7 +110,6 @@
                 "/Users/hannes/.platformio/packages/framework-arduinoespressif32@3.10006.210326/libraries/SimpleBLE/src",
                 "/Users/hannes/.platformio/packages/framework-arduinoespressif32@3.10006.210326/libraries/Ticker/src",
                 "/Users/hannes/.platformio/packages/framework-arduinoespressif32@3.10006.210326/libraries/WiFiProv/src",
-                "/Users/hannes/.platformio/packages/tool-unity",
                 ""
             ],
             "browse": {
@@ -133,8 +132,8 @@
                     "/Users/hannes/dev/esp-pixel-matrix/esp32/.pio/libdeps/wemos_d1_mini32/Adafruit BusIO",
                     "/Users/hannes/.platformio/packages/framework-arduinoespressif32@3.10006.210326/libraries/SPI/src",
                     "/Users/hannes/.platformio/packages/framework-arduinoespressif32@3.10006.210326/libraries/Wire/src",
-                    "/Users/hannes/dev/esp-pixel-matrix/esp32/.pio/libdeps/wemos_d1_mini32/ESP Async WebServer/src",
                     "/Users/hannes/dev/esp-pixel-matrix/esp32/.pio/libdeps/wemos_d1_mini32/ArduinoJson/src",
+                    "/Users/hannes/dev/esp-pixel-matrix/esp32/.pio/libdeps/wemos_d1_mini32/ESP Async WebServer/src",
                     "/Users/hannes/.platformio/packages/framework-arduinoespressif32@3.10006.210326/libraries/WiFi/src",
                     "/Users/hannes/.platformio/packages/framework-arduinoespressif32@3.10006.210326/libraries/FS/src",
                     "/Users/hannes/dev/esp-pixel-matrix/esp32/.pio/libdeps/wemos_d1_mini32/AsyncTCP/src",
@@ -218,12 +217,11 @@
                     "/Users/hannes/.platformio/packages/framework-arduinoespressif32@3.10006.210326/libraries/SimpleBLE/src",
                     "/Users/hannes/.platformio/packages/framework-arduinoespressif32@3.10006.210326/libraries/Ticker/src",
                     "/Users/hannes/.platformio/packages/framework-arduinoespressif32@3.10006.210326/libraries/WiFiProv/src",
-                    "/Users/hannes/.platformio/packages/tool-unity",
                     ""
                 ]
             },
             "defines": [
-                "PLATFORMIO=50205",
+                "PLATFORMIO=60111",
                 "ARDUINO_D1_MINI32",
                 "ESP32",
                 "ESP_PLATFORM",
@@ -236,8 +234,8 @@
                 "ARDUINO_BOARD=\"WeMos D1 MINI ESP32\"",
                 ""
             ],
-            "cStandard": "c99",
-            "cppStandard": "c++11",
+            "cStandard": "gnu99",
+            "cppStandard": "gnu++11",
             "compilerPath": "/Users/hannes/.platformio/packages/toolchain-xtensa32/bin/xtensa-esp32-elf-gcc",
             "compilerArgs": [
                 "-mlongcalls",

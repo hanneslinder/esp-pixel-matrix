@@ -1,7 +1,7 @@
 // Taken from: https://github.com/mrfaptastic/ESP32-HUB75-MatrixPanel-I2S-DMA/tree/master/examples/GraphicsLayer
 
 /**
- * Experimental layer class to do play with pixel in an off-screen buffer before painting to the DMA 
+ * Experimental layer class to do play with pixel in an off-screen buffer before painting to the DMA
  *
  * Requires FastLED
  *
@@ -35,13 +35,15 @@ void Layer::drawPixel(int16_t x, int16_t y, int r, int g, int b) {
   drawPixel(x, y, CRGB(r, g, b));
 }
 
-layerPixels* Layer::getPixels() {
+layerPixels *Layer::getPixels() {
   return pixels;
 }
 
 void Layer::drawPixel(int16_t x, int16_t y, CRGB color) {
-  if (x >= LAYER_WIDTH || x < 0) return;   // 0;
-  if (y >= LAYER_HEIGHT || y < 0) return;  // 0;
+  if (x >= LAYER_WIDTH || x < 0)
+    return;  // 0;
+  if (y >= LAYER_HEIGHT || y < 0)
+    return;  // 0;
 
   pixels->data[y][x] = color;
 }
@@ -76,14 +78,14 @@ void Layer::display() {
       matrix->drawPixelRGB888(x, y, _pixel.r, _pixel.g, _pixel.b);
 
       /*
-			if ( !transparency_enabled ){
-				matrix->drawPixelRGB888( x, y, _pixel.r, _pixel.g, _pixel.b);
-			} else {
-				if (_pixel != transparency_colour) {
-					matrix->drawPixelRGB888( x, y, _pixel.r, _pixel.g, _pixel.b);
-				}
-			}
-			*/
+      if ( !transparency_enabled ){
+              matrix->drawPixelRGB888( x, y, _pixel.r, _pixel.g, _pixel.b);
+      } else {
+              if (_pixel != transparency_colour) {
+                      matrix->drawPixelRGB888( x, y, _pixel.r, _pixel.g, _pixel.b);
+              }
+      }
+      */
     }  // end loop to copy fast led to the dma matrix
   }
 
@@ -119,26 +121,26 @@ void Layer::drawText(const char *buf, textPosition textPos, const GFXfont *f, ui
   }
 
   // getTextBounds isn't correct for variable width fonts
-  getTextBounds(buf, 0, 0, &x1, &y1, &w, &h);  //calc width of new string
+  getTextBounds(buf, 0, 0, &x1, &y1, &w, &h);  // calc width of new string
 
-  //Serial.printf("The width of the text is %d pixels, the height is %d pixels.\n", w,h);
+  // Serial.printf("The width of the text is %d pixels, the height is %d pixels.\n", w,h);
 
   /*
 
-			 From: https://learn.adafruit.com/adafruit-gfx-graphics-library/using-fonts
-		
-			 For example, whereas the cursor position when printing with the classic font identified 
-			 the top-left corner of the character cell, with new fonts the cursor position indicates the baseline — 
-			 the bottom-most row — of subsequent text. Characters may vary in size and width, and don’t 
-			 necessarily begin at the exact cursor column (as in below, this character starts one pixel 
-			 left of the cursor, but others may be on or to the right of it).
-			 */
+                   From: https://learn.adafruit.com/adafruit-gfx-graphics-library/using-fonts
 
-  int wstart = (LAYER_WIDTH - w) / 2 + xadjust;  // center align  
+                   For example, whereas the cursor position when printing with the classic font identified
+                   the top-left corner of the character cell, with new fonts the cursor position indicates the baseline —
+                   the bottom-most row — of subsequent text. Characters may vary in size and width, and don’t
+                   necessarily begin at the exact cursor column (as in below, this character starts one pixel
+                   left of the cursor, but others may be on or to the right of it).
+                   */
 
-  if (align == 0) {           // left align
+  int wstart = (LAYER_WIDTH - w) / 2 + xadjust;  // center align
+
+  if (align == 0) {  // left align
     wstart = 0 + xadjust;
-  } else if (align == 2) {    // righ align
+  } else if (align == 2) {  // righ align
     wstart = LAYER_WIDTH - w + xadjust;
   }
 
@@ -147,7 +149,7 @@ void Layer::drawText(const char *buf, textPosition textPos, const GFXfont *f, ui
       setCursor(wstart, 0);  // top
     } else if (textPos == BOTTOM) {
       setCursor(wstart, LAYER_HEIGHT - h + yadjust);
-    } else {                                                               // middle
+    } else {                                                // middle
       setCursor(wstart, (LAYER_HEIGHT - h) / 2 + yadjust);  // top
     }
   } else  // custom font
@@ -161,7 +163,7 @@ void Layer::drawText(const char *buf, textPosition textPos, const GFXfont *f, ui
       setCursor(wstart, ((LAYER_HEIGHT / 2) + (h / 2)) + yadjust);
     }
 
-    //Serial.printf("Layer: x1: %d, y1: %d, w: %d, h: %d.\n", x1, y1, w, h);
+    // Serial.printf("Layer: x1: %d, y1: %d, w: %d, h: %d.\n", x1, y1, w, h);
   }
 
   //	setCursor(0,16);
@@ -173,7 +175,7 @@ void Layer::drawText(const char *buf, textPosition textPos, const GFXfont *f, ui
 // Move the contents of the screen left (-ve) or right (+ve)
 void Layer::moveX(int offset) {
   if (offset > 0) {  // move right
-                     //	Sprintln("Moving right");
+    //	Sprintln("Moving right");
 
     for (int x = LAYER_WIDTH - 1; x >= 0; x--) {  // 63 to 0
       for (int y = 0; y < LAYER_HEIGHT; y++) {    // 0 to 31
@@ -192,7 +194,7 @@ void Layer::moveX(int offset) {
       for (int y = 0; y < LAYER_HEIGHT; y++) {
         if (x > (LAYER_WIDTH - 1) + offset) {
           pixels->data[y][x] = BLACK_BACKGROUND_PIXEL_COLOUR;
-          //Serial.println("eh?");
+          // Serial.println("eh?");
         } else {
           pixels->data[y][x] = pixels->data[y][x - offset];
           //	Serial.println("eh?");
@@ -214,7 +216,7 @@ void Layer::autoCenterX() {
     for (int y = 0; y < LAYER_HEIGHT; y++) {
       if (pixels->data[y][x] != BLACK_BACKGROUND_PIXEL_COLOUR) {
         leftmost_x = x;
-        //Serial.printf("Left most x pixel is %d\n", leftmost_x);
+        // Serial.printf("Left most x pixel is %d\n", leftmost_x);
         goto rightmost;
       }
     }
@@ -225,7 +227,7 @@ rightmost:
     for (int y = 0; y < LAYER_HEIGHT; y++) {
       if (pixels->data[y][x] != BLACK_BACKGROUND_PIXEL_COLOUR) {
         rightmost_x = x + 1;
-        //Serial.printf("Right most x pixel is %d\n", rightmost_x);
+        // Serial.printf("Right most x pixel is %d\n", rightmost_x);
         goto centreit;
       }
     }
@@ -233,11 +235,9 @@ rightmost:
 
 centreit:
   adjusted_leftmost_x = (LAYER_WIDTH - (rightmost_x - leftmost_x)) / 2;
-  //Serial.printf("Adjusted: %d, Moving x coords by %d pixels.\n", adjusted_leftmost_x, adjusted_leftmost_x-leftmost_x);
+  // Serial.printf("Adjusted: %d, Moving x coords by %d pixels.\n", adjusted_leftmost_x, adjusted_leftmost_x-leftmost_x);
   moveX(adjusted_leftmost_x - leftmost_x);
 }  // end autoCentreX
-
-
 
 void Layer::moveY(int delta) {
   // Not implemented
@@ -250,16 +250,16 @@ Layer::~Layer(void) {
 /* Merge FastLED layers into a super layer and display. Definition */
 namespace LayerCompositor {
 /*
-		 * Display the foreground pixels if they're not the background/transparent color.
-		 * If not, then fill with whatever is in the background.
-		 * 
-		 * writeToBg = write the result back to the _bgLayer, and not directly to the output device!
-		 * 			   -> no need to do a subsequent bgLayer.display() otherwise.
-		 */
+ * Display the foreground pixels if they're not the background/transparent color.
+ * If not, then fill with whatever is in the background.
+ *
+ * writeToBg = write the result back to the _bgLayer, and not directly to the output device!
+ * 			   -> no need to do a subsequent bgLayer.display() otherwise.
+ */
 void Stack(MatrixPanel_I2S_DMA &disp, const Layer &_bgLayer, const Layer &_fgLayer, bool writeBackToBg) {
   for (int y = 0; y < LAYER_HEIGHT; y++) {
     for (int x = 0; x < LAYER_WIDTH; x++) {
-      //https://www.educative.io/edpresso/how-to-resolve-the-expression-must-have-class-type-error-in-cpp
+      // https://www.educative.io/edpresso/how-to-resolve-the-expression-must-have-class-type-error-in-cpp
       if (_fgLayer.pixels->data[y][x] == _fgLayer.transparency_colour)  // foreground is transparent, show the _bgLayer colors
       {
         if (writeBackToBg)  // write the foreground to the background layer... perhaps so we can do stuff later with the _fgLayer.
@@ -280,13 +280,13 @@ void Stack(MatrixPanel_I2S_DMA &disp, const Layer &_bgLayer, const Layer &_fgLay
 }  // end stack
 
 /*
-		 * Where the foreground pixels are not the background/transparent color, populate with 
-		 * whatever is in the background.
-		 */
+ * Where the foreground pixels are not the background/transparent color, populate with
+ * whatever is in the background.
+ */
 void Siloette(MatrixPanel_I2S_DMA &disp, const Layer &_bgLayer, const Layer &_fgLayer) {
   for (int y = 0; y < LAYER_HEIGHT; y++) {
     for (int x = 0; x < LAYER_WIDTH; x++) {
-      //https://www.educative.io/edpresso/how-to-resolve-the-expression-must-have-class-type-error-in-cpp
+      // https://www.educative.io/edpresso/how-to-resolve-the-expression-must-have-class-type-error-in-cpp
       if (_fgLayer.pixels->data[y][x] != _fgLayer.transparency_colour) {
         disp.drawPixelRGB888(x, y, _bgLayer.pixels->data[y][x].r, _bgLayer.pixels->data[y][x].g, _bgLayer.pixels->data[y][x].b);
       }  // if the foreground is transparent, then print whatever is the bg
