@@ -27,7 +27,7 @@ The esp32 code uses [platformIO](https://platformio.org/)
 - take contents of `browser/dist` folder and copy into `esp32/data` directory.
 - copy data onto esp32 via platformIO `build file system image` and `upload file system image`.
 
-When power is connected, the ESP32 creates a WIFI hotspot and displays the connection settings on the matrix. Connect to this network and use the WIFI portal to configure your WIFI settings. The ESP32 then reboots and trys to connect to the configured WIFI. On subsequent reboots, the matrix will show its IP address for 10 seconds before switching to its regular mode.
+When power is connected, the ESP32 creates a WIFI hotspot and displays the connection settings on the matrix. Connect to this network and use the WIFI portal to configure your WIFI settings. [The credentials for connecting to the portal can be found here](https://github.com/hanneslinder/esp-pixel-matrix/blob/main/esp32/src/main.cpp#L55) The ESP32 then reboots and trys to connect to the configured WIFI. On subsequent reboots, the matrix will show its IP address for 10 seconds before switching to its regular mode.
 
 ### OTA updates
 
