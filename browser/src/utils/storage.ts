@@ -90,3 +90,11 @@ export const getSavedItemsFromLocalStorage = (): SavedItem[] => {
 
 	return items;
 };
+
+export const saveApiKeyToLocalStorage = (apiKey: string) => {
+	localStorage.setItem("unsplash-api-key", apiKey);
+};
+
+export const getApiKeyFromLocalStorage = (): string | null => {
+	return localStorage.getItem("unsplash-api-key");
+};
