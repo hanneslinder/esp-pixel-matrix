@@ -117,8 +117,6 @@ boolean customDataEnabled = false;
 char customDataServer[128] = "";
 unsigned long lastCustomDataUpdate = 0;
 
-uint16_t myBLACK, myWHITE, myRED, myGREEN, myBLUE;
-
 void layer_draw_callback(int16_t x, int16_t y, uint8_t r_data, uint8_t g_data, uint8_t b_data)
 {
   matrix->drawPixelRGB888(x, y, r_data, g_data, b_data);
@@ -136,12 +134,6 @@ void initMatrix()
       { R1_PIN, G1_PIN, B1_PIN, R2_PIN, G2_PIN, B2_PIN, A_PIN, B_PIN, C_PIN, D_PIN, E_PIN, LAT_PIN,
           OE_PIN, CLK_PIN });
 
-  myBLACK = matrix->color565(0, 0, 0);
-  myWHITE = matrix->color565(255, 255, 255);
-  myRED = matrix->color565(255, 0, 0);
-  myGREEN = matrix->color565(0, 255, 0);
-  myBLUE = matrix->color565(0, 0, 255);
-
   matrix = new MatrixPanel_I2S_DMA(mxconfig);
   matrix->begin();
   matrix->setBrightness8(10);
@@ -149,28 +141,9 @@ void initMatrix()
   bgLayer.clear();
   textLayer.clear();
 
-  // matrix->clearScreen();
-  // // matrix->fillScreen(myWHITE);
+  textLayer.drawCentreText("starting up...", MIDDLE, &Picopixel, NULL, 0);
 
-  matrix->setTextColor(matrix->color444(15, 15, 15));
-  matrix->println("Init Matrix");
-
-  // bgLayer.init(matrix);
-  // bgLayer.clear();
-  // bgLayer.setTransparency(false);
-
-  // textLayer.init(matrix);
-  // textLayer.clear();
-
-  // matrix->clearScreen();
-  // matrix->setTextSize(1);
-  // matrix->setCursor(20, 2);
-  // matrix->print("Hey there!");
-
-  // Serial.println("Matrix initialized");
-
-  // matrix->setPanelBrightness(2);
-  // matrix->clearScreen();
+  gfx_compositor.Stack(bgLayer, textLayer);
 }
 
 void onEvent(AsyncWebSocket* server, AsyncWebSocketClient* client, AwsEventType type, void* arg,
@@ -272,54 +245,38 @@ std::string rgb2hex(int r, int g, int b, bool with_head)
 // Sending all pixels at once is not possible because of a lack of memory
 // Sending the data line by line causes the message queue to fill up
 // Therefore chunk response with a handful of lines per message
-// void sendPixels()
-// {
-//   layerPixels* pixels = bgLayer.getPixels();
-//   int linesPerMessage = 4;
-
-//   for (int y = 0; y < 32 / linesPerMessage; y++) {
-//     JsonDocument doc;
-//     JsonArray data = doc["data"].to<JsonArray>();
-//     doc["action"] = "matrixPixels";
-//     doc["layer"] = "bg";
-//     doc["line-start"] = y * linesPerMessage;
-//     doc["line-end"] = y * linesPerMessage + linesPerMessage;
-
-//     for (int line = 0; line < linesPerMessage; line++) {
-//       int currentLine = y * linesPerMessage + line;
-//       JsonArray lineData = data.add<JsonArray>();
-
-//       for (int x = 0; x < 64; x++) {
-//         CRGB pixel = pixels->data[currentLine][x];
-
-//         if (currentLine == 0 && x == 63) {
-//           Serial.printf("Pixel RGB %d %d %d", pixel.r, pixel.g, pixel.b);
-//         }
-
-//         lineData.add(rgb2hex(pixel.r, pixel.g, pixel.b, true));
-//       }
-//     }
-
-//     String json;
-//     serializeJson(doc, json);
-//     ws.textAll(json);
-//   }
-// }
-
-// Convert 5-6-5 color to 32bit hex value
-String convert16BitTo32BitHexColor(uint16_t hexValue)
+void sendPixels()
 {
-  unsigned r = (hexValue & 0xF800) >> 11;
-  unsigned g = (hexValue & 0x07E0) >> 5;
-  unsigned b = hexValue & 0x001F;
+  layerPixels* pixels = bgLayer.pixels;
+  int linesPerMessage = 4;
 
-  r = (r * 255) / 31;
-  g = (g * 255) / 63;
-  b = (b * 255) / 31;
+  for (int y = 0; y < 32 / linesPerMessage; y++) {
+    JsonDocument doc;
+    JsonArray data = doc["data"].to<JsonArray>();
+    doc["action"] = "matrixPixels";
+    doc["layer"] = "bg";
+    doc["line-start"] = y * linesPerMessage;
+    doc["line-end"] = y * linesPerMessage + linesPerMessage;
 
-  char hex[8] = { 0 };
-  sprintf(hex, "#%02X%02X%02X", r, g, b);
-  return hex;
+    for (int line = 0; line < linesPerMessage; line++) {
+      int currentLine = y * linesPerMessage + line;
+      JsonArray lineData = data.add<JsonArray>();
+
+      for (int x = 0; x < 64; x++) {
+        CRGB pixel = pixels->data[currentLine][x];
+
+        if (currentLine == 0 && x == 63) {
+          Serial.printf("Pixel RGB %d %d %d", pixel.r, pixel.g, pixel.b);
+        }
+
+        lineData.add(rgb2hex(pixel.r, pixel.g, pixel.b, true));
+      }
+    }
+
+    String json;
+    serializeJson(doc, json);
+    ws.textAll(json);
+  }
 }
 
 void sendState()
@@ -577,17 +534,22 @@ void printTextItem(char text[], TextItem& t)
   // }
 
   if (pos == TOP) {
-    textLayer.setCursor(0, 0);
+    textLayer.setCursor(t.offsetX, t.offsetY);
   } else if (pos == BOTTOM) {
-    textLayer.setCursor(0, 24);
+    textLayer.setCursor(t.offsetX, 24 + t.offsetY);
   } else {
-    textLayer.setCursor(0, 16);
+    textLayer.setCursor(t.offsetX, 16 + t.offsetY);
   }
 
-  textLayer.setTextSize(1); // size 1 == 8 pixels high
-  textLayer.setTextWrap(false); // Don't wrap at end of line - will do ourselves
+  if (t.font != 0) {
+    textLayer.setFont(&Picopixel);
+  } else {
+    textLayer.setFont(NULL);
+  }
 
-  // start at top left, with 8 pixel of spacing
+  textLayer.setTextColor(t.color);
+  textLayer.setTextSize(t.size);
+  textLayer.setTextWrap(false);
   textLayer.println(text);
 }
 
