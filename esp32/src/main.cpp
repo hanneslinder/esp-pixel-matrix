@@ -17,6 +17,7 @@
 
 #include "config/pins.h"
 #include "config/settings.h"
+#include "matrix/MatrixController.h"
 #include "utils/utils.h"
 
 #define U_PART U_SPIFFS
@@ -24,7 +25,7 @@
 size_t updateContentLength;
 int lastUpdateProgress = 0;
 
-MatrixPanel_I2S_DMA* matrix = nullptr;
+MatrixController matrix;
 
 int lastResetButtonState = HIGH;
 int currentResetButtonState = HIGH;
@@ -75,34 +76,9 @@ boolean customDataEnabled = false;
 char customDataServer[128] = "";
 unsigned long lastCustomDataUpdate = 0;
 
-void layer_draw_callback(int16_t x, int16_t y, uint8_t r_data, uint8_t g_data, uint8_t b_data)
-{
-  matrix->drawPixelRGB888(x, y, r_data, g_data, b_data);
-}
-
-GFX_Layer bgLayer(PANEL_RES_X* PANEL_CHAIN, PANEL_RES_Y, layer_draw_callback);
-GFX_Layer textLayer(PANEL_RES_X* PANEL_CHAIN, PANEL_RES_Y, layer_draw_callback);
-GFX_LayerCompositor gfx_compositor(layer_draw_callback);
-
 void handleWebSocketMessage(void* arg, uint8_t* data, size_t len);
 
-void initMatrix()
-{
-  HUB75_I2S_CFG mxconfig(PANEL_RES_X, PANEL_RES_Y, PANEL_CHAIN,
-      { R1_PIN, G1_PIN, B1_PIN, R2_PIN, G2_PIN, B2_PIN, A_PIN, B_PIN, C_PIN, D_PIN, E_PIN, LAT_PIN,
-          OE_PIN, CLK_PIN });
-
-  matrix = new MatrixPanel_I2S_DMA(mxconfig);
-  matrix->begin();
-  matrix->setBrightness8(10);
-
-  bgLayer.clear();
-  textLayer.clear();
-
-  textLayer.drawCentreText("starting up...", MIDDLE, &Picopixel, NULL, 0);
-
-  gfx_compositor.Stack(bgLayer, textLayer);
-}
+void initMatrix() { matrix.begin(); }
 
 void onEvent(AsyncWebSocket* server, AsyncWebSocketClient* client, AwsEventType type, void* arg,
     uint8_t* data, size_t len)
@@ -131,7 +107,7 @@ void handleDrawPixelMessage(JsonArray& data)
     const uint16_t y = d["p"][1];
     const char* color = d["c"];
     const uint16_t c = strtol(color, NULL, 16);
-    bgLayer.drawPixel(x, y, c);
+    matrix.getBackgroundLayer().drawPixel(x, y, c);
   }
 }
 
@@ -147,7 +123,7 @@ void handleDrawImageMessage(JsonArray data)
     y = row;
 
     const uint16_t c = strtol(d, NULL, 16);
-    bgLayer.drawPixel(x, y, c);
+    matrix.getBackgroundLayer().drawPixel(x, y, c);
 
     if (x == 63) {
       row++;
@@ -205,7 +181,7 @@ std::string rgb2hex(int r, int g, int b, bool with_head)
 // Therefore chunk response with a handful of lines per message
 void sendPixels()
 {
-  layerPixels* pixels = bgLayer.pixels;
+  layerPixels* pixels = matrix.getBackgroundLayer().pixels;
   int linesPerMessage = 4;
 
   for (int y = 0; y < 32 / linesPerMessage; y++) {
@@ -414,16 +390,16 @@ void handleWebSocketMessage(void* arg, uint8_t* data, size_t len)
       JsonArray data = doc["data"].as<JsonArray>();
       handleDrawImageMessage(data);
     } else if (isStringEqual(action, "clear")) {
-      bgLayer.clear();
-      textLayer.clear();
+      matrix.getBackgroundLayer().clear();
+      matrix.getTextLayer().clear();
     } else if (isStringEqual(action, "toggleClock")) {
-      textLayer.clear();
+      matrix.getTextLayer().clear();
       lastshowText = showText;
       showText = doc["visible"];
     } else if (isStringEqual(action, "fill")) {
       const char* color = doc["color"];
       const uint16_t c = strtol(color, NULL, 16);
-      bgLayer.fillScreen(c);
+      matrix.getBackgroundLayer().fillScreen(c);
     } else if (isStringEqual(action, "compositionMode")) {
       compositionMode = doc["mode"];
     } else if (isStringEqual(action, "getPixels")) {
@@ -437,7 +413,8 @@ void handleWebSocketMessage(void* arg, uint8_t* data, size_t len)
       resetWifi();
     } else if (isStringEqual(action, "setBrightness")) {
       brightness = doc["brightness"].as<int>();
-      matrix->setPanelBrightness(min(brightness, MAX_BRIGHTNESS));
+      // matrix->setPanelBrightness(min(brightness, MAX_BRIGHTNESS));
+      matrix.setBrightness(min(brightness, MAX_BRIGHTNESS));
     } else if (isStringEqual(action, "setText")) {
       JsonArray text = doc["text"].as<JsonArray>();
       setText(text);
@@ -492,30 +469,30 @@ void printTextItem(char text[], TextItem& t)
   // }
 
   if (pos == TOP) {
-    textLayer.setCursor(t.offsetX, t.offsetY);
+    matrix.getTextLayer().setCursor(t.offsetX, t.offsetY);
   } else if (pos == BOTTOM) {
-    textLayer.setCursor(t.offsetX, 24 + t.offsetY);
+    matrix.getTextLayer().setCursor(t.offsetX, 24 + t.offsetY);
   } else {
-    textLayer.setCursor(t.offsetX, 16 + t.offsetY);
+    matrix.getTextLayer().setCursor(t.offsetX, 16 + t.offsetY);
   }
 
   if (t.font != 0) {
-    textLayer.setFont(&Picopixel);
+    matrix.getTextLayer().setFont(&Picopixel);
   } else {
-    textLayer.setFont(NULL);
+    matrix.getTextLayer().setFont(NULL);
   }
 
-  textLayer.setTextColor(t.color);
-  textLayer.setTextSize(t.size);
-  textLayer.setTextWrap(false);
-  textLayer.println(text);
+  matrix.getTextLayer().setTextColor(t.color);
+  matrix.getTextLayer().setTextSize(t.size);
+  matrix.getTextLayer().setTextWrap(false);
+  matrix.getTextLayer().println(text);
 }
 
 void printText()
 {
   struct tm timeinfo;
 
-  textLayer.clear();
+  matrix.getTextLayer().clear();
 
   if (!getLocalTime(&timeinfo)) {
     Serial.println("Failed to obtain time");
@@ -706,10 +683,10 @@ void loop()
 
     // Cannot use text layer here as we have a `delay` that blocks the rendering
 
-    textLayer.clear();
-    textLayer.setCursor(9, 13);
-    textLayer.setFont(&Picopixel);
-    textLayer.println(ip);
+    matrix.getTextLayer().clear();
+    matrix.getTextLayer().setCursor(9, 13);
+    matrix.getTextLayer().setFont(&Picopixel);
+    matrix.getTextLayer().println(ip);
 
     delay(6000);
 
@@ -717,11 +694,11 @@ void loop()
   } else if (currentResetButtonState == LOW) {
     char resetTimeString[16];
     itoa(resetButtonPressDuration, resetTimeString, 10);
-    textLayer.clear();
-    textLayer.setCursor(0, 0);
-    textLayer.println("Reset");
-    textLayer.setCursor(0, 16);
-    textLayer.println(resetTimeString);
+    matrix.getTextLayer().clear();
+    matrix.getTextLayer().setCursor(0, 0);
+    matrix.getTextLayer().println("Reset");
+    matrix.getTextLayer().setCursor(0, 16);
+    matrix.getTextLayer().println(resetTimeString);
   } else if (showText == true) {
     printText();
   } else if (customDataUpdateInterval > -1 && customDataServer != "") {
@@ -732,16 +709,16 @@ void loop()
 
   switch (compositionMode) {
   case 0:
-    gfx_compositor.Stack(bgLayer, textLayer);
+    matrix.getCompositor().Stack(matrix.getBackgroundLayer(), matrix.getTextLayer());
     break;
   case 1:
-    gfx_compositor.Blend(bgLayer, textLayer);
+    matrix.getCompositor().Blend(matrix.getBackgroundLayer(), matrix.getTextLayer());
     break;
   case 2:
-    gfx_compositor.Siloette(bgLayer, textLayer);
+    matrix.getCompositor().Siloette(matrix.getBackgroundLayer(), matrix.getTextLayer());
     break;
   default:
-    gfx_compositor.Stack(bgLayer, textLayer);
+    matrix.getCompositor().Stack(matrix.getBackgroundLayer(), matrix.getTextLayer());
     break;
   }
 
