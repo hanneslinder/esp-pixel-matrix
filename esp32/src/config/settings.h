@@ -2,8 +2,6 @@
 
 // WiFi Portal Configuration
 const char* ntpServer = "at.pool.ntp.org";
-const char* portalSsid = "PixelClock";
-const char* portalPassword = "clockpixel";
 const char* portalIP = "10.0.1.1";
 
 // Time and Locale Settings

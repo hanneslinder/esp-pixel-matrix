@@ -16,6 +16,7 @@
 #include <sstream>
 
 #include "config/pins.h"
+#include "config/secrets.h"
 #include "config/settings.h"
 #include "matrix/MatrixController.h"
 #include "utils/utils.h"
@@ -484,8 +485,17 @@ String processHtmlTemplate(const String& var)
 
 void initWebServer()
 {
-  server.serveStatic("/", SPIFFS, "/");
+  server.serveStatic("/", SPIFFS, "/").setCacheControl("max-age=14400");
 
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
+    request->send(SPIFFS, "/index.html", String(), false, processHtmlTemplate);
+  });
+
+  server.serveStatic("/main.css", SPIFFS, "/main.css").setCacheControl("max-age=14400");
+
+  server.serveStatic("/main.js", SPIFFS, "/main.js").setCacheControl("max-age=14400");
+
+  // Firmware update route
   server.on("/update", HTTP_GET, [](AsyncWebServerRequest* request) { handleUpdate(request); });
 
   server.on(
@@ -495,23 +505,28 @@ void initWebServer()
 
   Update.onProgress(printUpdateProgress);
 
-  server.on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
-    request->send(SPIFFS, "/index.html", String(), false, processHtmlTemplate);
-  });
-
-  server.on("/main.css", HTTP_GET,
-      [](AsyncWebServerRequest* request) { request->send(SPIFFS, "/main.css", "text/css"); });
-
-  server.on("/main.js", HTTP_GET, [](AsyncWebServerRequest* request) {
-    request->send(SPIFFS, "/main.js", "application/javascript");
-  });
-
   server.begin();
+}
+
+void connectToWiFi()
+{
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(ssid, password);
+
+  Serial.println("\nConnecting");
+
+  while (WiFi.status() != WL_CONNECTED) {
+    Serial.print(".");
+    delay(100);
+  }
+
+  Serial.println("Connected to WiFi");
+  Serial.print("IP address: ");
+  Serial.println(WiFi.localIP());
 }
 
 void initCaptivePortal()
 {
-
   server.on("/clear", HTTP_GET, [&](AsyncWebServerRequest* request) {
     espConnect.clearConfiguration();
     request->send(200);
@@ -532,12 +547,9 @@ void initCaptivePortal()
 
   Serial.println("Trying to connect to saved WiFi or will start portal...");
 
-  espConnect.begin("arduino", "Captive Portal SSID");
+  espConnect.begin("arduino", portalSsid, portalPassword);
 
   Serial.println("ESPConnect completed, continuing setup()...");
-
-  initWebServer();
-  initWebSocket();
 }
 
 String httpGETRequest(const char* serverName)
@@ -625,7 +637,28 @@ void setup()
   socketData = (char*)malloc(SOCKET_DATA_SIZE * sizeof(char));
 
   initMatrix();
-  initCaptivePortal();
+
+  if (useCaptivePortal == true) {
+    initCaptivePortal();
+  } else {
+    connectToWiFi();
+  }
+
+  initWebServer();
+  initWebSocket();
+
+  // Set timezone
+  if (timezone != NULL) {
+    Serial.printf("Setting timezone to %s\n", timezone);
+  } else {
+    Serial.println("Timezone not set");
+  }
+
+  if (ntpServer != NULL) {
+    Serial.printf("Setting NTP server to %s\n", ntpServer);
+  } else {
+    Serial.println("NTP server not set");
+  }
   configTzTime(timezone, ntpServer);
 
   // WiFi.setSleep(false);
@@ -633,7 +666,9 @@ void setup()
 
 void loop()
 {
-  espConnect.loop();
+  if (useCaptivePortal == true) {
+    espConnect.loop();
+  }
 
   checkResetButton();
 

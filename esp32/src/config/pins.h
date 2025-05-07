@@ -22,6 +22,6 @@
 #define RESET_PIN 32
 
 // Matrix Configuration
-#define PANEL_RES_X 64
-#define PANEL_RES_Y 32
+#define PANEL_WIDTH 64
+#define PANEL_HEIGHT 32
 #define PANEL_CHAIN 1

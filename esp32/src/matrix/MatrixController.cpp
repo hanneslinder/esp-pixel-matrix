@@ -1,12 +1,13 @@
 #include "MatrixController.h"
+#include "utils/utils.h"
 #include <Fonts/Picopixel.h>
 
 MatrixController* MatrixController::instance = nullptr;
 
 MatrixController::MatrixController()
     : matrix(nullptr)
-    , bgLayer(PANEL_RES_X * PANEL_CHAIN, PANEL_RES_Y, layer_draw_callback)
-    , textLayer(PANEL_RES_X * PANEL_CHAIN, PANEL_RES_Y, layer_draw_callback)
+    , bgLayer(PANEL_WIDTH * PANEL_CHAIN, PANEL_HEIGHT, layer_draw_callback)
+    , textLayer(PANEL_WIDTH * PANEL_CHAIN, PANEL_HEIGHT, layer_draw_callback)
     , gfx_compositor(layer_draw_callback)
 {
   instance = this;
@@ -21,7 +22,7 @@ MatrixController::~MatrixController()
 
 void MatrixController::begin()
 {
-  HUB75_I2S_CFG mxconfig(PANEL_RES_X, PANEL_RES_Y, PANEL_CHAIN,
+  HUB75_I2S_CFG mxconfig(PANEL_WIDTH, PANEL_HEIGHT, PANEL_CHAIN,
       { R1_PIN, G1_PIN, B1_PIN, R2_PIN, G2_PIN, B2_PIN, A_PIN, B_PIN, C_PIN, D_PIN, E_PIN, LAT_PIN,
           OE_PIN, CLK_PIN });
 
@@ -32,7 +33,7 @@ void MatrixController::begin()
   bgLayer.clear();
   textLayer.clear();
 
-  textLayer.drawCentreText("starting up...", MIDDLE, &Picopixel, NULL, 0);
+  textLayer.drawCentreText("starting up...", MIDDLE, &Picopixel, textLayer.color565(255, 0, 0), 0);
 
   gfx_compositor.Stack(bgLayer, textLayer);
 }
@@ -64,54 +65,57 @@ void MatrixController::drawPixelRGB888(int16_t x, int16_t y, uint8_t r, uint8_t 
   }
 }
 
+// Taken from https://github.com/mrcodetastic/GFX_Lite/blob/main/src/GFX_Layer.cpp
+// Seems like there is a bug with setting the proper text color, therefore this is copied and
+// adjusted here
 void MatrixController::drawText(const char* buf, textPosition textPos, const GFXfont* f,
     uint16_t color, uint8_t size, int xAdjust, int yAdjust, int align)
 {
   if (matrix) {
+    int16_t x1, y1;
+    uint16_t w, h;
 
-    // Set custom font
+    textLayer.setTextWrap(false);
+    textLayer.setTextSize(size);
+
     if (f) {
       textLayer.setFont((GFXfont*)f);
     } else {
       textLayer.setFont();
     }
 
-    int16_t xOne, yOne;
-    uint16_t w, h;
+    textLayer.getTextBounds(buf, 0, 0, &x1, &y1, &w, &h);
 
-    textLayer.setTextWrap(false);
-    textLayer.setTextColor(color);
-    textLayer.setTextSize(size);
+    int16_t wstart = (PANEL_WIDTH - w) / 2 + xAdjust;
 
-    matrix->getTextBounds(buf, 0, 0, &xOne, &yOne, &w, &h);
-
-    int wstart = (PANEL_RES_X - w) / 2 + xAdjust;
-
-    if (align == 0) { // left align
+    if (align == 0) {
       wstart = 0 + xAdjust;
-    } else if (align == 2) { // righ align
-      wstart = PANEL_RES_X - w + xAdjust;
+    } else if (align == 2) {
+      wstart = PANEL_WIDTH - w + xAdjust;
     }
 
     if (!f) {
       if (textPos == TOP) {
-        textLayer.setCursor(wstart, 0); // top
+        textLayer.setCursor(wstart, yAdjust); // top
       } else if (textPos == BOTTOM) {
-        textLayer.setCursor(wstart, PANEL_RES_Y - h + yAdjust);
+        textLayer.setCursor(wstart, PANEL_HEIGHT - h + yAdjust);
       } else { // middle
-        textLayer.setCursor(wstart, (PANEL_RES_Y - h) / 2 + yAdjust); // top
+        textLayer.setCursor(wstart, (PANEL_HEIGHT - h) / 2 + yAdjust); // top
       }
     } else {
       if (textPos == TOP) {
         textLayer.setCursor(wstart, h + yAdjust); // top
       } else if (textPos == BOTTOM) {
-        textLayer.setCursor(wstart + 1, (PANEL_RES_Y - 1) + yAdjust);
+        textLayer.setCursor(wstart + 1, (PANEL_HEIGHT - 1) + yAdjust);
       } else { // middle
-        textLayer.setCursor(wstart, ((PANEL_RES_Y / 2) + (h / 2)) + yAdjust);
+        textLayer.setCursor(wstart, ((PANEL_HEIGHT / 2) + (h / 2)) + yAdjust);
       }
     }
 
+    textLayer.setTextColor(color);
     textLayer.println(buf);
+
+    // textLayer.drawCentreText(buf, textPos, f, color, yAdjust);
   }
 }
 
