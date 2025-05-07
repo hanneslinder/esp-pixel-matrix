@@ -7,9 +7,9 @@
 #include <FastLED.h>
 #include <Fonts/Picopixel.h>
 #include <HTTPClient.h>
+#include <MycilaESPConnect.h>
 #include <Update.h>
 #include <WiFi.h>
-#include <WiFiManager.h>
 #include <Wire.h>
 #include <sstream>
 
@@ -80,9 +80,11 @@ const char* locale = "en_US.UTF-8";
 // Flag to display IP address on startup
 bool startupFinished = false;
 
-WiFiManager wifiManager;
-
 AsyncWebServer server(80);
+Mycila::ESPConnect espConnect(server);
+uint32_t lastLog = 0;
+const char* hostname = "pixelclock";
+
 AsyncWebSocket ws("/ws");
 
 int compositionMode = 0;
@@ -270,8 +272,8 @@ void sendPixels()
   int linesPerMessage = 4;
 
   for (int y = 0; y < 32 / linesPerMessage; y++) {
-    StaticJsonDocument<8192> doc;
-    JsonArray data = doc.createNestedArray("data");
+    JsonDocument doc;
+    JsonArray data = doc["data"].to<JsonArray>();
     doc["action"] = "matrixPixels";
     doc["layer"] = "bg";
     doc["line-start"] = y * linesPerMessage;
@@ -279,7 +281,7 @@ void sendPixels()
 
     for (int line = 0; line < linesPerMessage; line++) {
       int currentLine = y * linesPerMessage + line;
-      JsonArray lineData = data.createNestedArray();
+      JsonArray lineData = data.add<JsonArray>();
 
       for (int x = 0; x < 64; x++) {
         CRGB pixel = pixels->data[currentLine][x];
@@ -316,8 +318,8 @@ String convert16BitTo32BitHexColor(uint16_t hexValue)
 
 void sendState()
 {
-  StaticJsonDocument<1024> doc;
-  JsonArray textArray = doc.createNestedArray("text");
+  JsonDocument doc;
+  JsonArray textArray = doc["text"].to<JsonArray>();
 
   doc["action"] = "matrixSettings";
   doc["customData"] = customDataEnabled;
@@ -330,7 +332,7 @@ void sendState()
 
   for (TextItem t : textContent) {
     if (strcmp(t.text, "") != 0) {
-      JsonObject textObject = textArray.createNestedObject();
+      JsonObject textObject = textArray.add<JsonObject>();
       textObject["text"] = t.text;
       textObject["line"] = t.line;
       textObject["offsetX"] = t.offsetX;
@@ -372,7 +374,7 @@ void resetWifi()
   textLayer.clear();
   textLayer.drawText("Reset", MIDDLE, NULL, timeColor, 6, -4);
 
-  wifiManager.resetSettings();
+  // wifiManager.resetSettings();
   delay(1000);
 
   ESP.restart();
@@ -414,7 +416,7 @@ void handleDoUpdate(AsyncWebServerRequest* request, const String& filename, size
     if (!Update.end(true)) {
       Update.printError(Serial);
     } else {
-      StaticJsonDocument<265> doc;
+      JsonDocument doc;
       doc["action"] = "updateProgress";
       doc["progress"] = 100;
 
@@ -435,7 +437,7 @@ void printUpdateProgress(size_t prg, size_t sz)
   Serial.printf("Progress: %d%%\n", progress);
 
   if (progress == 0 || progress - lastUpdateProgress >= 5 || progress >= 99) {
-    StaticJsonDocument<265> doc;
+    JsonDocument doc;
     doc["action"] = "updateProgress";
     doc["progress"] = progress;
 
@@ -471,7 +473,7 @@ void handleWebSocketMessage(void* arg, uint8_t* data, size_t len)
     Serial.println("Single packet data");
 
     const size_t capacity = 34000;
-    DynamicJsonDocument doc(capacity);
+    JsonDocument doc;
     DeserializationError error = deserializeJson(doc, data);
 
     if (error) {
@@ -536,7 +538,7 @@ void handleWebSocketMessage(void* arg, uint8_t* data, size_t len)
 
     if (currSocketBufferIndex >= info->len) {
       const size_t capacity = 48000;
-      DynamicJsonDocument doc(capacity);
+      JsonDocument doc;
       DeserializationError error = deserializeJson(doc, socketData);
 
       if (error) {
@@ -631,36 +633,39 @@ void initWebServer()
   server.on("/main.js", HTTP_GET, [](AsyncWebServerRequest* request) {
     request->send(SPIFFS, "/main.js", "application/javascript");
   });
-}
 
-void configModeCallback(WiFiManager* myWiFiManager)
-{
-  matrix->clearScreen();
-  matrix->setTextSize(1);
-  matrix->setCursor(20, 2);
-  matrix->print("WIFI:");
-  matrix->setCursor(3, 12);
-  matrix->print(portalSsid);
-  matrix->setCursor(9, 22);
-  matrix->print(portalIP);
+  server.begin();
 }
 
 void initCaptivePortal()
 {
-  wifiManager.setAPCallback(configModeCallback);
 
-  textLayer.clear();
-  textLayer.drawText("Connect:", TOP, NULL, timeColor, 1, 0);
-  textLayer.drawText(portalSsid, MIDDLE, NULL, timeColor, 1, 0);
-  textLayer.drawText(portalIP, BOTTOM, NULL, timeColor, 1, 0);
-
-  wifiManager.setAPStaticIPConfig(
-      IPAddress(10, 0, 1, 1), IPAddress(10, 0, 1, 1), IPAddress(255, 255, 255, 0));
-
-  if (!wifiManager.autoConnect(portalSsid)) {
+  server.on("/clear", HTTP_GET, [&](AsyncWebServerRequest* request) {
+    espConnect.clearConfiguration();
+    request->send(200);
     ESP.restart();
-    delay(1000);
-  }
+  });
+
+  // network state listener
+  espConnect.listen(
+      [](__unused Mycila::ESPConnect::State previous, __unused Mycila::ESPConnect::State state) {
+        JsonDocument doc;
+        espConnect.toJson(doc.to<JsonObject>());
+        serializeJsonPretty(doc, Serial);
+        Serial.println();
+      });
+
+  espConnect.setAutoRestart(true);
+  espConnect.setBlocking(true);
+
+  Serial.println("Trying to connect to saved WiFi or will start portal...");
+
+  espConnect.begin("arduino", "Captive Portal SSID");
+
+  Serial.println("ESPConnect completed, continuing setup()...");
+
+  initWebServer();
+  initWebSocket();
 }
 
 String httpGETRequest(const char* serverName)
@@ -739,28 +744,32 @@ void setup()
 
   setLocale();
 
-  char host[16];
-  snprintf(host, 16, "ESP%012llX", ESP.getEfuseMac());
-  MDNS.begin(host);
-  MDNS.addService("http", "tcp", 80);
+  // char host[16];
+  // snprintf(host, 16, "ESP%012llX", ESP.getEfuseMac());
+  // MDNS.begin(host);
+  // MDNS.addService("http", "tcp", 80);
 
   pinMode(RESET_PIN, INPUT_PULLUP);
   socketData = (char*)malloc(SOCKET_DATA_SIZE * sizeof(char));
 
   initMatrix();
-  // initCaptivePortal();
-  initWebServer();
-  initWebSocket();
+  initCaptivePortal();
   configTzTime(timezone, ntpServer);
 
-  WiFi.setSleep(false);
-  esp_wifi_set_ps(WIFI_PS_NONE);
-
-  server.begin();
+  // WiFi.setSleep(false);
 }
 
 void loop()
 {
+  espConnect.loop();
+
+  if (millis() - lastLog > 5000) {
+    JsonDocument doc;
+    espConnect.toJson(doc.to<JsonObject>());
+    serializeJson(doc, Serial);
+    Serial.println();
+    lastLog = millis();
+  }
   // checkResetButton();
 
   // if (startupFinished == false) {
