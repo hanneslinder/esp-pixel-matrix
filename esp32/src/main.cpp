@@ -155,27 +155,6 @@ void setText(JsonArray& text)
   }
 }
 
-std::string rgb2hex(int r, int g, int b, bool with_head = false);
-
-std::string rgb2hex(int r, int g, int b, bool with_head)
-{
-  std::stringstream ss;
-  ss << std::hex << (r << 16 | g << 8 | b);
-
-  std::string hex = ss.str();
-  int str_length = hex.length();
-
-  for (int i = 0; i < 6 - str_length; i++) {
-    hex = "0" + hex;
-  }
-
-  if (with_head) {
-    hex = "#" + hex;
-  }
-
-  return hex;
-}
-
 // Sending all pixels at once is not possible because of a lack of memory
 // Sending the data line by line causes the message queue to fill up
 // Therefore chunk response with a handful of lines per message
@@ -203,7 +182,7 @@ void sendPixels()
           Serial.printf("Pixel RGB %d %d %d", pixel.r, pixel.g, pixel.b);
         }
 
-        lineData.add(rgb2hex(pixel.r, pixel.g, pixel.b, true));
+        lineData.add(convertRgbToHex(pixel.r, pixel.g, pixel.b, true));
       }
     }
 
@@ -462,43 +441,23 @@ void printTextItem(char text[], TextItem& t)
 {
   textPosition pos = static_cast<textPosition>(t.line);
 
-  // if (t.font == 0) {
-  //   textLayer.drawText(text, pos, NULL, t.color, t.size, t.offsetX, t.offsetY, t.align);
-  // } else {
-  //   textLayer.drawText(text, pos, &Picopixel, t.color, t.size, t.offsetX, t.offsetY, t.align);
-  // }
-
-  if (pos == TOP) {
-    matrix.getTextLayer().setCursor(t.offsetX, t.offsetY);
-  } else if (pos == BOTTOM) {
-    matrix.getTextLayer().setCursor(t.offsetX, 24 + t.offsetY);
+  if (t.font == 0) {
+    matrix.drawText(text, pos, NULL, t.color, t.size, t.offsetX, t.offsetY, t.align);
   } else {
-    matrix.getTextLayer().setCursor(t.offsetX, 16 + t.offsetY);
+    matrix.drawText(text, pos, &Picopixel, t.color, t.size, t.offsetX, t.offsetY, t.align);
   }
-
-  if (t.font != 0) {
-    matrix.getTextLayer().setFont(&Picopixel);
-  } else {
-    matrix.getTextLayer().setFont(NULL);
-  }
-
-  matrix.getTextLayer().setTextColor(t.color);
-  matrix.getTextLayer().setTextSize(t.size);
-  matrix.getTextLayer().setTextWrap(false);
-  matrix.getTextLayer().println(text);
 }
 
 void printText()
 {
   struct tm timeinfo;
 
-  matrix.getTextLayer().clear();
-
   if (!getLocalTime(&timeinfo)) {
     Serial.println("Failed to obtain time");
     return;
   }
   // textLayer.clear();
+  matrix.getTextLayer().clear();
 
   for (TextItem t : textContent) {
     char parsedDate[32];
@@ -707,30 +666,17 @@ void loop()
 
   ws.cleanupClients();
 
-  switch (compositionMode) {
-  case 0:
-    matrix.getCompositor().Stack(matrix.getBackgroundLayer(), matrix.getTextLayer());
-    break;
-  case 1:
-    matrix.getCompositor().Blend(matrix.getBackgroundLayer(), matrix.getTextLayer());
-    break;
-  case 2:
-    matrix.getCompositor().Siloette(matrix.getBackgroundLayer(), matrix.getTextLayer());
-    break;
-  default:
-    matrix.getCompositor().Stack(matrix.getBackgroundLayer(), matrix.getTextLayer());
-    break;
-  }
+  matrix.render(compositionMode);
 
   // // Check if WiFi is connected
-  // if (millis() - lastWiFiCheck > 30000) {
-  //   lastWiFiCheck = millis();
-  //   if (WiFi.status() != WL_CONNECTED) {
-  //     Serial.println("WiFi disconnected, reconnecting...");
-  //     WiFi.disconnect();
-  //     WiFi.reconnect();
-  //   }
-  // }
+  if (millis() - lastWiFiCheck > 30000) {
+    lastWiFiCheck = millis();
+    if (WiFi.status() != WL_CONNECTED) {
+      Serial.println("WiFi disconnected, reconnecting...");
+      WiFi.disconnect();
+      WiFi.reconnect();
+    }
+  }
 
   delay(100);
 }

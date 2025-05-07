@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <sstream>
 
 bool isStringEqual(const char* string1, const char* string2)
 {
@@ -18,5 +19,24 @@ String convert16BitTo32BitHexColor(uint16_t hexValue)
 
   char hex[8] = { 0 };
   sprintf(hex, "#%02X%02X%02X", r, g, b);
+  return hex;
+}
+
+std::string convertRgbToHex(int r, int g, int b, bool with_head)
+{
+  std::stringstream ss;
+  ss << std::hex << (r << 16 | g << 8 | b);
+
+  std::string hex = ss.str();
+  int str_length = hex.length();
+
+  for (int i = 0; i < 6 - str_length; i++) {
+    hex = "0" + hex;
+  }
+
+  if (with_head) {
+    hex = "#" + hex;
+  }
+
   return hex;
 }
