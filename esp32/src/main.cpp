@@ -1,11 +1,13 @@
+#include "SPIFFS.h"
+#include "time.h"
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <AsyncTCP.h>
 #include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
 #include <ESPAsyncWebServer.h>
 #include <ESPmDNS.h>
-// #include <FastLED.h>
 #include <Fonts/Picopixel.h>
+#include <GFX_Layer.hpp>
 #include <HTTPClient.h>
 #include <MycilaESPConnect.h>
 #include <Update.h>
@@ -13,76 +15,30 @@
 #include <Wire.h>
 #include <sstream>
 
-// #include "Layer.h"
-#include "SPIFFS.h"
-#include "time.h"
-#include "utils.h"
+#include "config/pins.h"
+#include "config/settings.h"
+#include "utils/utils.h"
+
 #define U_PART U_SPIFFS
-size_t content_len;
+
+size_t updateContentLength;
 int lastUpdateProgress = 0;
-
-#define USE_CUSTOM_PINS
-#define A_PIN 5
-#define B_PIN 19
-#define C_PIN 22
-#define D_PIN 21
-#define E_PIN 12
-
-#define R1_PIN 2
-#define R2_PIN 18
-#define G1_PIN 15
-#define G2_PIN 27
-#define B1_PIN 4
-#define B2_PIN 14
-
-#define CLK_PIN 23
-#define LAT_PIN 25
-#define OE_PIN 26
-
-#define RESET_PIN 32
-
-#include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
-#include <GFX_Layer.hpp>
 
 MatrixPanel_I2S_DMA* matrix = nullptr;
 
-const int RESET_SHORT_PRESS_TIME = 2000;
 int lastResetButtonState = HIGH;
 int currentResetButtonState = HIGH;
 unsigned long resetButtonPressedTime = 0;
 unsigned long resetButtonReleasedTime = 0;
 unsigned long resetButtonPressDuration = 0;
 
-#define PANEL_RES_X 64
-#define PANEL_RES_Y 32
-#define PANEL_CHAIN 1
-
-// WIFI Portal config
-const char* ntpServer = "at.pool.ntp.org";
-const char* portalSsid = "PixelClock";
-const char* portalPassword = "clockpixel";
-const char* portalIP = "10.0.1.1";
-
-// Replace with your timezone
-// https://ftp.fau.de/aminet/util/time/tzinfo.txt
-const char* timezone = "CET-1CEST,M3.5.0,M10.5.0/3";
-
-// locale does not work at the moment, ESP-IDF does not support it
-const char* locale = "en_US.UTF-8";
-
-// Flag to display IP address on startup
 bool startupFinished = false;
 
 AsyncWebServer server(80);
 Mycila::ESPConnect espConnect(server);
 uint32_t lastLog = 0;
-const char* hostname = "pixelclock";
 
 AsyncWebSocket ws("/ws");
-
-int compositionMode = 0;
-int brightness = 2;
-const int MAX_BRIGHTNESS = 15;
 
 // clock options
 boolean showText = true;
@@ -90,6 +46,9 @@ boolean lastshowText = false;
 boolean forceUpdateTime = false;
 uint16_t timeColor = 0xFFFF;
 uint16_t dateColor = 0xFFFF;
+
+int compositionMode = 0;
+int brightness = 2;
 
 static unsigned long lastWiFiCheck = 0;
 
@@ -107,7 +66,6 @@ struct TextItem {
 TextItem textContent[5]
     = { { "%H:%M", 0xFFFF, 1, -3, 1, 2, 1 }, { "%d.%b", 0xFFFF, 3, -1, 1, 1, 2 } };
 
-const size_t SOCKET_DATA_SIZE = 48000;
 char* socketData;
 int currSocketBufferIndex = 0;
 
@@ -357,7 +315,7 @@ void handleDoUpdate(AsyncWebServerRequest* request, const String& filename, size
 {
   if (!index) {
     Serial.println("Update");
-    content_len = request->contentLength();
+    updateContentLength = request->contentLength();
     // if filename includes spiffs, update the spiffs partition
     int cmd = (filename.indexOf("spiffs") > -1) ? U_PART : U_FLASH;
 
@@ -396,7 +354,7 @@ void handleDoUpdate(AsyncWebServerRequest* request, const String& filename, size
 
 void printUpdateProgress(size_t prg, size_t sz)
 {
-  int progress = (prg * 100) / content_len;
+  int progress = (prg * 100) / updateContentLength;
   Serial.printf("Progress: %d%%\n", progress);
 
   if (progress == 0 || progress - lastUpdateProgress >= 5 || progress >= 99) {
