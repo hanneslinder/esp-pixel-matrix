@@ -11,6 +11,7 @@
 #include <WiFi.h>
 #include <WiFiManager.h>
 #include <Wire.h>
+#include <sstream>
 
 #include "Layer.h"
 #include "SPIFFS.h"
@@ -40,6 +41,15 @@ int lastUpdateProgress = 0;
 
 #define RESET_PIN 32
 
+#include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
+
+#define PANEL_RES_X 64 // Number of pixels wide of each INDIVIDUAL panel module.
+#define PANEL_RES_Y 32 // Number of pixels tall of each INDIVIDUAL panel module.
+#define PANEL_CHAIN 1 // Total number of panels chained one to another
+
+// MatrixPanel_I2S_DMA dma_display;
+MatrixPanel_I2S_DMA* matrix = nullptr;
+
 const int RESET_SHORT_PRESS_TIME = 2000;
 int lastResetButtonState = HIGH;
 int currentResetButtonState = HIGH;
@@ -47,9 +57,12 @@ unsigned long resetButtonPressedTime = 0;
 unsigned long resetButtonReleasedTime = 0;
 unsigned long resetButtonPressDuration = 0;
 
-MatrixPanel_I2S_DMA matrix;
-Layer bgLayer(matrix);
-Layer textLayer(matrix);
+#define PANEL_RES_X 64
+#define PANEL_RES_Y 32
+#define PANEL_CHAIN 1
+
+Layer bgLayer;
+Layer textLayer;
 
 // WIFI Portal config
 const char* ntpServer = "at.pool.ntp.org";
@@ -83,6 +96,8 @@ boolean forceUpdateTime = false;
 uint16_t timeColor = 0xFFFF;
 uint16_t dateColor = 0xFFFF;
 
+static unsigned long lastWiFiCheck = 0;
+
 struct TextItem {
   char text[32];
   uint16_t color;
@@ -94,9 +109,8 @@ struct TextItem {
   uint8_t font;
 };
 
-TextItem textContent[5] = {
-    {"%H:%M", 0xFFFF, 1, -3, 1, 2, 1},
-    {"%d.%b", 0xFFFF, 3, -1, 1, 1, 2}};
+TextItem textContent[5]
+    = { { "%H:%M", 0xFFFF, 1, -3, 1, 2, 1 }, { "%d.%b", 0xFFFF, 3, -1, 1, 1, 2 } };
 
 const size_t SOCKET_DATA_SIZE = 48000;
 char* socketData;
@@ -108,41 +122,71 @@ boolean customDataEnabled = false;
 char customDataServer[128] = "";
 unsigned long lastCustomDataUpdate = 0;
 
+uint16_t myBLACK, myWHITE, myRED, myGREEN, myBLUE;
+
 void handleWebSocketMessage(void* arg, uint8_t* data, size_t len);
 
-void initMatrix() {
-  matrix.begin(R1_PIN, G1_PIN, B1_PIN, R2_PIN, G2_PIN, B2_PIN, A_PIN, B_PIN, C_PIN, D_PIN, E_PIN, LAT_PIN, OE_PIN, CLK_PIN);
+void initMatrix()
+{
+  HUB75_I2S_CFG mxconfig(PANEL_RES_X, PANEL_RES_Y, PANEL_CHAIN,
+      { R1_PIN, G1_PIN, B1_PIN, R2_PIN, G2_PIN, B2_PIN, A_PIN, B_PIN, C_PIN, D_PIN, E_PIN, LAT_PIN,
+          OE_PIN, CLK_PIN });
 
-  bgLayer.init();
-  bgLayer.clear();
-  bgLayer.setTransparency(false);
+  myBLACK = matrix->color565(0, 0, 0);
+  myWHITE = matrix->color565(255, 255, 255);
+  myRED = matrix->color565(255, 0, 0);
+  myGREEN = matrix->color565(0, 255, 0);
+  myBLUE = matrix->color565(0, 0, 255);
 
-  textLayer.init();
-  textLayer.clear();
+  matrix = new MatrixPanel_I2S_DMA(mxconfig);
+  matrix->begin();
+  matrix->setBrightness8(10);
+  // matrix->clearScreen();
+  // // matrix->fillScreen(myWHITE);
 
-  matrix.setPanelBrightness(2);
-  matrix.clearScreen();
+  matrix->setTextColor(matrix->color444(15, 15, 15));
+  matrix->println("Init Matrix");
+
+  // bgLayer.init(matrix);
+  // bgLayer.clear();
+  // bgLayer.setTransparency(false);
+
+  // textLayer.init(matrix);
+  // textLayer.clear();
+
+  // matrix->clearScreen();
+  // matrix->setTextSize(1);
+  // matrix->setCursor(20, 2);
+  // matrix->print("Hey there!");
+
+  // Serial.println("Matrix initialized");
+
+  // matrix->setPanelBrightness(2);
+  // matrix->clearScreen();
 }
 
-void onEvent(AsyncWebSocket* server, AsyncWebSocketClient* client, AwsEventType type, void* arg, uint8_t* data, size_t len) {
+void onEvent(AsyncWebSocket* server, AsyncWebSocketClient* client, AwsEventType type, void* arg,
+    uint8_t* data, size_t len)
+{
   switch (type) {
-    case WS_EVT_CONNECT:
-      Serial.printf("WebSocket client #%u connected from %s\n", client->id(),
-                    client->remoteIP().toString().c_str());
-      break;
-    case WS_EVT_DISCONNECT:
-      Serial.printf("WebSocket client #%u disconnected\n", client->id());
-      break;
-    case WS_EVT_DATA:
-      handleWebSocketMessage(arg, data, len);
-      break;
-    case WS_EVT_PONG:
-    case WS_EVT_ERROR:
-      break;
+  case WS_EVT_CONNECT:
+    Serial.printf("WebSocket client #%u connected from %s\n", client->id(),
+        client->remoteIP().toString().c_str());
+    break;
+  case WS_EVT_DISCONNECT:
+    Serial.printf("WebSocket client #%u disconnected\n", client->id());
+    break;
+  case WS_EVT_DATA:
+    handleWebSocketMessage(arg, data, len);
+    break;
+  case WS_EVT_PONG:
+  case WS_EVT_ERROR:
+    break;
   }
 }
 
-void handleDrawPixelMessage(JsonArray& data) {
+void handleDrawPixelMessage(JsonArray& data)
+{
   for (JsonVariant d : data) {
     const uint16_t x = d["p"][0];
     const uint16_t y = d["p"][1];
@@ -152,7 +196,8 @@ void handleDrawPixelMessage(JsonArray& data) {
   }
 }
 
-void handleDrawImageMessage(JsonArray data) {
+void handleDrawImageMessage(JsonArray data)
+{
   int row = 0;
   int index = 0;
   int x = 0;
@@ -173,7 +218,8 @@ void handleDrawImageMessage(JsonArray data) {
   }
 }
 
-void setText(JsonArray& text) {
+void setText(JsonArray& text)
+{
   int index = 0;
 
   memset(textContent, 0, sizeof(textContent));
@@ -196,7 +242,8 @@ void setText(JsonArray& text) {
 
 std::string rgb2hex(int r, int g, int b, bool with_head = false);
 
-std::string rgb2hex(int r, int g, int b, bool with_head) {
+std::string rgb2hex(int r, int g, int b, bool with_head)
+{
   std::stringstream ss;
   ss << std::hex << (r << 16 | g << 8 | b);
 
@@ -217,7 +264,8 @@ std::string rgb2hex(int r, int g, int b, bool with_head) {
 // Sending all pixels at once is not possible because of a lack of memory
 // Sending the data line by line causes the message queue to fill up
 // Therefore chunk response with a handful of lines per message
-void sendPixels() {
+void sendPixels()
+{
   layerPixels* pixels = bgLayer.getPixels();
   int linesPerMessage = 4;
 
@@ -251,7 +299,8 @@ void sendPixels() {
 }
 
 // Convert 5-6-5 color to 32bit hex value
-String convert16BitTo32BitHexColor(uint16_t hexValue) {
+String convert16BitTo32BitHexColor(uint16_t hexValue)
+{
   unsigned r = (hexValue & 0xF800) >> 11;
   unsigned g = (hexValue & 0x07E0) >> 5;
   unsigned b = hexValue & 0x001F;
@@ -260,12 +309,13 @@ String convert16BitTo32BitHexColor(uint16_t hexValue) {
   g = (g * 255) / 63;
   b = (b * 255) / 31;
 
-  char hex[8] = {0};
+  char hex[8] = { 0 };
   sprintf(hex, "#%02X%02X%02X", r, g, b);
   return hex;
 }
 
-void sendState() {
+void sendState()
+{
   StaticJsonDocument<1024> doc;
   JsonArray textArray = doc.createNestedArray("text");
 
@@ -297,7 +347,8 @@ void sendState() {
   ws.textAll(json);
 }
 
-void handleCustomData(JsonObject customData) {
+void handleCustomData(JsonObject customData)
+{
   if (customData["updateInterval"] != 0 && customData["updateInterval"] >= -1) {
     customDataEnabled = true;
     customDataUpdateInterval = customData["updateInterval"];
@@ -314,7 +365,8 @@ void handleCustomData(JsonObject customData) {
   }
 }
 
-void resetWifi() {
+void resetWifi()
+{
   Serial.println("Reset WIFI settings!");
 
   textLayer.clear();
@@ -328,12 +380,16 @@ void resetWifi() {
 }
 
 // OTA UPDATE HANDLING START
-void handleUpdate(AsyncWebServerRequest* request) {
-  char* html = "<form method='POST' action='/doUpdate' enctype='multipart/form-data'><input type='file' name='update'><input type='submit' value='Update'></form>";
+void handleUpdate(AsyncWebServerRequest* request)
+{
+  char* html = "<form method='POST' action='/doUpdate' enctype='multipart/form-data'><input "
+               "type='file' name='update'><input type='submit' value='Update'></form>";
   request->send(200, "text/html", html);
 }
 
-void handleDoUpdate(AsyncWebServerRequest* request, const String& filename, size_t index, uint8_t* data, size_t len, bool final) {
+void handleDoUpdate(AsyncWebServerRequest* request, const String& filename, size_t index,
+    uint8_t* data, size_t len, bool final)
+{
   if (!index) {
     Serial.println("Update");
     content_len = request->contentLength();
@@ -350,7 +406,7 @@ void handleDoUpdate(AsyncWebServerRequest* request, const String& filename, size
   }
 
   if (final) {
-    AsyncWebServerResponse* response = request->beginResponse(200, "text/plain", "update finished");
+    AsyncWebServerResponse* response = request->beginResponse(200, "text/plain", "updatefinished");
     response->addHeader("Refresh", "20");
     response->addHeader("Location", "/");
     request->send(response);
@@ -373,7 +429,8 @@ void handleDoUpdate(AsyncWebServerRequest* request, const String& filename, size
   }
 }
 
-void printUpdateProgress(size_t prg, size_t sz) {
+void printUpdateProgress(size_t prg, size_t sz)
+{
   int progress = (prg * 100) / content_len;
   Serial.printf("Progress: %d%%\n", progress);
 
@@ -390,7 +447,8 @@ void printUpdateProgress(size_t prg, size_t sz) {
   }
 }
 
-void setLocale() {
+void setLocale()
+{
   if (setlocale(LC_ALL, locale) == NULL) {
     Serial.printf("Unable to set locale %s", locale);
     return;
@@ -404,7 +462,8 @@ void setLocale() {
 
 // OTA UPDATE HANDLING END
 
-void handleWebSocketMessage(void* arg, uint8_t* data, size_t len) {
+void handleWebSocketMessage(void* arg, uint8_t* data, size_t len)
+{
   AwsFrameInfo* info = (AwsFrameInfo*)arg;
 
   // Data fit into one packet
@@ -455,7 +514,7 @@ void handleWebSocketMessage(void* arg, uint8_t* data, size_t len) {
       resetWifi();
     } else if (isStringEqual(action, "setBrightness")) {
       brightness = doc["brightness"].as<int>();
-      matrix.setPanelBrightness(min(brightness, MAX_BRIGHTNESS));
+      matrix->setPanelBrightness(min(brightness, MAX_BRIGHTNESS));
     } else if (isStringEqual(action, "setText")) {
       JsonArray text = doc["text"].as<JsonArray>();
       setText(text);
@@ -499,17 +558,25 @@ void handleWebSocketMessage(void* arg, uint8_t* data, size_t len) {
   }
 }
 
-void printTextItem(char text[], TextItem& t) {
+void printTextItem(char text[], TextItem& t)
+{
   textPosition pos = static_cast<textPosition>(t.line);
 
-  if (t.font == 0) {
-    textLayer.drawText(text, pos, NULL, t.color, t.size, t.offsetX, t.offsetY, t.align);
-  } else {
-    textLayer.drawText(text, pos, &Picopixel, t.color, t.size, t.offsetX, t.offsetY, t.align);
-  }
+  // if (t.font == 0) {
+  //   textLayer.drawText(text, pos, NULL, t.color, t.size, t.offsetX, t.offsetY, t.align);
+  // } else {
+  //   textLayer.drawText(text, pos, &Picopixel, t.color, t.size, t.offsetX, t.offsetY, t.align);
+  // }
+
+  matrix->setTextSize(1); // size 1 == 8 pixels high
+  matrix->setTextWrap(false); // Don't wrap at end of line - will do ourselves
+
+  matrix->setCursor(5, 0); // start at top left, with 8 pixel of spacing
+  matrix->println(text);
 }
 
-void printText() {
+void printText()
+{
   struct tm timeinfo;
 
   if (!getLocalTime(&timeinfo)) {
@@ -525,12 +592,14 @@ void printText() {
   }
 }
 
-void initWebSocket() {
+void initWebSocket()
+{
   ws.onEvent(onEvent);
   server.addHandler(&ws);
 }
 
-String processHtmlTemplate(const String& var) {
+String processHtmlTemplate(const String& var)
+{
   if (var == "websocketUrl") {
     const String ip = WiFi.localIP().toString();
     return ip;
@@ -539,35 +608,45 @@ String processHtmlTemplate(const String& var) {
   return String();
 }
 
-void initWebServer() {
+void initWebServer()
+{
   server.serveStatic("/", SPIFFS, "/");
 
   server.on("/update", HTTP_GET, [](AsyncWebServerRequest* request) { handleUpdate(request); });
 
   server.on(
-      "/doUpdate", HTTP_POST, [](AsyncWebServerRequest* request) {}, [](AsyncWebServerRequest* request, const String& filename, size_t index, uint8_t* data, size_t len, bool final) { handleDoUpdate(request, filename, index, data, len, final); });
+      "/doUpdate", HTTP_POST, [](AsyncWebServerRequest* request) {},
+      [](AsyncWebServerRequest* request, const String& filename, size_t index, uint8_t* data,
+          size_t len, bool final) { handleDoUpdate(request, filename, index, data, len, final); });
 
   Update.onProgress(printUpdateProgress);
 
-  server.on("/", HTTP_GET, [](AsyncWebServerRequest* request) { request->send(SPIFFS, "/index.html", String(), false, processHtmlTemplate); });
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
+    request->send(SPIFFS, "/index.html", String(), false, processHtmlTemplate);
+  });
 
-  server.on("/main.css", HTTP_GET, [](AsyncWebServerRequest* request) { request->send(SPIFFS, "/main.css", "text/css"); });
+  server.on("/main.css", HTTP_GET,
+      [](AsyncWebServerRequest* request) { request->send(SPIFFS, "/main.css", "text/css"); });
 
-  server.on("/main.js", HTTP_GET, [](AsyncWebServerRequest* request) { request->send(SPIFFS, "/main.js", "application/javascript"); });
+  server.on("/main.js", HTTP_GET, [](AsyncWebServerRequest* request) {
+    request->send(SPIFFS, "/main.js", "application/javascript");
+  });
 }
 
-void configModeCallback(WiFiManager* myWiFiManager) {
-  matrix.clearScreen();
-  matrix.setTextSize(1);
-  matrix.setCursor(20, 2);
-  matrix.print("WIFI:");
-  matrix.setCursor(3, 12);
-  matrix.print(portalSsid);
-  matrix.setCursor(9, 22);
-  matrix.print(portalIP);
+void configModeCallback(WiFiManager* myWiFiManager)
+{
+  matrix->clearScreen();
+  matrix->setTextSize(1);
+  matrix->setCursor(20, 2);
+  matrix->print("WIFI:");
+  matrix->setCursor(3, 12);
+  matrix->print(portalSsid);
+  matrix->setCursor(9, 22);
+  matrix->print(portalIP);
 }
 
-void initCaptivePortal() {
+void initCaptivePortal()
+{
   wifiManager.setAPCallback(configModeCallback);
 
   textLayer.clear();
@@ -575,7 +654,8 @@ void initCaptivePortal() {
   textLayer.drawText(portalSsid, MIDDLE, NULL, timeColor, 1, 0);
   textLayer.drawText(portalIP, BOTTOM, NULL, timeColor, 1, 0);
 
-  wifiManager.setAPStaticIPConfig(IPAddress(10, 0, 1, 1), IPAddress(10, 0, 1, 1), IPAddress(255, 255, 255, 0));
+  wifiManager.setAPStaticIPConfig(
+      IPAddress(10, 0, 1, 1), IPAddress(10, 0, 1, 1), IPAddress(255, 255, 255, 0));
 
   if (!wifiManager.autoConnect(portalSsid)) {
     ESP.restart();
@@ -583,7 +663,8 @@ void initCaptivePortal() {
   }
 }
 
-String httpGETRequest(const char* serverName) {
+String httpGETRequest(const char* serverName)
+{
   HTTPClient http;
 
   http.begin(serverName);
@@ -606,7 +687,8 @@ String httpGETRequest(const char* serverName) {
 
 // Custom data allows the esp32 to poll data from remote server.
 // This should work but is currently not implemented in the browser UI
-void handleCustomData() {
+void handleCustomData()
+{
   // UpdateInterval is in seconds
   if (millis() - lastCustomDataUpdate > customDataUpdateInterval * 1000) {
     lastCustomDataUpdate = millis();
@@ -625,7 +707,8 @@ void handleCustomData() {
   }
 }
 
-void checkResetButton() {
+void checkResetButton()
+{
   currentResetButtonState = digitalRead(RESET_PIN);
 
   if (currentResetButtonState == LOW && lastResetButtonState == LOW) {
@@ -649,7 +732,8 @@ void checkResetButton() {
   lastResetButtonState = currentResetButtonState;
 }
 
-void setup() {
+void setup()
+{
   Serial.begin(115200);
   SPIFFS.begin();
 
@@ -664,59 +748,77 @@ void setup() {
   socketData = (char*)malloc(SOCKET_DATA_SIZE * sizeof(char));
 
   initMatrix();
-  initCaptivePortal();
+  // initCaptivePortal();
   initWebServer();
   initWebSocket();
   configTzTime(timezone, ntpServer);
 
   WiFi.setSleep(false);
+  esp_wifi_set_ps(WIFI_PS_NONE);
 
   server.begin();
 }
 
-void loop() {
-  checkResetButton();
+void loop()
+{
+  // checkResetButton();
 
-  if (startupFinished == false) {
-    const String ip = WiFi.localIP().toString();
+  // if (startupFinished == false) {
+  //   const String ip = WiFi.localIP().toString();
 
-    // Cannot use text layer here as we have a `delay` that blocks the rendering
-    matrix.clearScreen();
-    matrix.setFont(&Picopixel);
-    matrix.setCursor(9, 13);
-    matrix.print(ip);
+  //   // Cannot use text layer here as we have a `delay` that blocks the rendering
+  //   matrix->clearScreen();
+  //   // matrix->setFont(&Picopixel);
+  //   // matrix->setCursor(9, 13);
+  //   // matrix->print(ip);
 
-    delay(6000);
+  //   matrix->setTextSize(1); // size 1 == 8 pixels high
+  //   matrix->setTextWrap(false); // Don't wrap at end of line - will do ourselves
 
-    startupFinished = true;
-  } else if (currentResetButtonState == LOW) {
-    char resetTimeString[16];
-    itoa(resetButtonPressDuration, resetTimeString, 10);
-    textLayer.clear();
-    textLayer.drawText("Reset", MIDDLE, NULL, timeColor, 2, 1);
-    textLayer.drawText(resetTimeString, BOTTOM, NULL, dateColor, 1, -2);
-  } else if (showText == true) {
-    printText();
-  } else if (customDataUpdateInterval > -1 && customDataServer != "") {
-    handleCustomData();
-  }
+  //   matrix->setCursor(5, 0); // start at top left, with 8 pixel of spacing
+  //   matrix->println("LED MATRIX!");
 
-  ws.cleanupClients();
+  //   delay(6000);
 
-  switch (compositionMode) {
-    case 0:
-      LayerCompositor::Stack(matrix, bgLayer, textLayer);
-      break;
-    case 1:
-      LayerCompositor::Blend(matrix, bgLayer, textLayer);
-      break;
-    case 2:
-      LayerCompositor::Siloette(matrix, bgLayer, textLayer);
-      break;
-    default:
-      LayerCompositor::Stack(matrix, bgLayer, textLayer);
-      break;
-  }
+  //   startupFinished = true;
+  // } else if (currentResetButtonState == LOW) {
+  //   char resetTimeString[16];
+  //   itoa(resetButtonPressDuration, resetTimeString, 10);
+  //   textLayer.clear();
+  //   textLayer.drawText("Reset", MIDDLE, NULL, timeColor, 2, 1);
+  //   textLayer.drawText(resetTimeString, BOTTOM, NULL, dateColor, 1, -2);
+  // } else if (showText == true) {
+  //   printText();
+  // } else if (customDataUpdateInterval > -1 && customDataServer != "") {
+  //   handleCustomData();
+  // }
 
-  delay(100);
+  // ws.cleanupClients();
+
+  // // switch (compositionMode) {
+  // // case 0:
+  // //   LayerCompositor::Stack(matrix, bgLayer, textLayer);
+  // //   break;
+  // //   case 1:
+  // //     LayerCompositor::Blend(*matrix, bgLayer, textLayer);
+  // //     break;
+  // //   case 2:
+  // //     LayerCompositor::Siloette(*matrix, bgLayer, textLayer);
+  // //     break;
+  // //   default:
+  // //     LayerCompositor::Stack(*matrix, bgLayer, textLayer);
+  // //     break;
+  // // }
+
+  // // Check if WiFi is connected
+  // if (millis() - lastWiFiCheck > 30000) {
+  //   lastWiFiCheck = millis();
+  //   if (WiFi.status() != WL_CONNECTED) {
+  //     Serial.println("WiFi disconnected, reconnecting...");
+  //     WiFi.disconnect();
+  //     WiFi.reconnect();
+  //   }
+  // }
+
+  // delay(100);
 }
