@@ -4,7 +4,7 @@
 #include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
 #include <ESPAsyncWebServer.h>
 #include <ESPmDNS.h>
-#include <FastLED.h>
+// #include <FastLED.h>
 #include <Fonts/Picopixel.h>
 #include <HTTPClient.h>
 #include <MycilaESPConnect.h>
@@ -13,7 +13,7 @@
 #include <Wire.h>
 #include <sstream>
 
-#include "Layer.h"
+// #include "Layer.h"
 #include "SPIFFS.h"
 #include "time.h"
 #include "utils.h"
@@ -42,12 +42,8 @@ int lastUpdateProgress = 0;
 #define RESET_PIN 32
 
 #include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
+#include <GFX_Layer.hpp>
 
-#define PANEL_RES_X 64 // Number of pixels wide of each INDIVIDUAL panel module.
-#define PANEL_RES_Y 32 // Number of pixels tall of each INDIVIDUAL panel module.
-#define PANEL_CHAIN 1 // Total number of panels chained one to another
-
-// MatrixPanel_I2S_DMA dma_display;
 MatrixPanel_I2S_DMA* matrix = nullptr;
 
 const int RESET_SHORT_PRESS_TIME = 2000;
@@ -60,9 +56,6 @@ unsigned long resetButtonPressDuration = 0;
 #define PANEL_RES_X 64
 #define PANEL_RES_Y 32
 #define PANEL_CHAIN 1
-
-Layer bgLayer;
-Layer textLayer;
 
 // WIFI Portal config
 const char* ntpServer = "at.pool.ntp.org";
@@ -126,6 +119,15 @@ unsigned long lastCustomDataUpdate = 0;
 
 uint16_t myBLACK, myWHITE, myRED, myGREEN, myBLUE;
 
+void layer_draw_callback(int16_t x, int16_t y, uint8_t r_data, uint8_t g_data, uint8_t b_data)
+{
+  matrix->drawPixelRGB888(x, y, r_data, g_data, b_data);
+}
+
+GFX_Layer bgLayer(PANEL_RES_X* PANEL_CHAIN, PANEL_RES_Y, layer_draw_callback);
+GFX_Layer textLayer(PANEL_RES_X* PANEL_CHAIN, PANEL_RES_Y, layer_draw_callback);
+GFX_LayerCompositor gfx_compositor(layer_draw_callback);
+
 void handleWebSocketMessage(void* arg, uint8_t* data, size_t len);
 
 void initMatrix()
@@ -143,6 +145,10 @@ void initMatrix()
   matrix = new MatrixPanel_I2S_DMA(mxconfig);
   matrix->begin();
   matrix->setBrightness8(10);
+
+  bgLayer.clear();
+  textLayer.clear();
+
   // matrix->clearScreen();
   // // matrix->fillScreen(myWHITE);
 
@@ -266,39 +272,39 @@ std::string rgb2hex(int r, int g, int b, bool with_head)
 // Sending all pixels at once is not possible because of a lack of memory
 // Sending the data line by line causes the message queue to fill up
 // Therefore chunk response with a handful of lines per message
-void sendPixels()
-{
-  layerPixels* pixels = bgLayer.getPixels();
-  int linesPerMessage = 4;
+// void sendPixels()
+// {
+//   layerPixels* pixels = bgLayer.getPixels();
+//   int linesPerMessage = 4;
 
-  for (int y = 0; y < 32 / linesPerMessage; y++) {
-    JsonDocument doc;
-    JsonArray data = doc["data"].to<JsonArray>();
-    doc["action"] = "matrixPixels";
-    doc["layer"] = "bg";
-    doc["line-start"] = y * linesPerMessage;
-    doc["line-end"] = y * linesPerMessage + linesPerMessage;
+//   for (int y = 0; y < 32 / linesPerMessage; y++) {
+//     JsonDocument doc;
+//     JsonArray data = doc["data"].to<JsonArray>();
+//     doc["action"] = "matrixPixels";
+//     doc["layer"] = "bg";
+//     doc["line-start"] = y * linesPerMessage;
+//     doc["line-end"] = y * linesPerMessage + linesPerMessage;
 
-    for (int line = 0; line < linesPerMessage; line++) {
-      int currentLine = y * linesPerMessage + line;
-      JsonArray lineData = data.add<JsonArray>();
+//     for (int line = 0; line < linesPerMessage; line++) {
+//       int currentLine = y * linesPerMessage + line;
+//       JsonArray lineData = data.add<JsonArray>();
 
-      for (int x = 0; x < 64; x++) {
-        CRGB pixel = pixels->data[currentLine][x];
+//       for (int x = 0; x < 64; x++) {
+//         CRGB pixel = pixels->data[currentLine][x];
 
-        if (currentLine == 0 && x == 63) {
-          Serial.printf("Pixel RGB %d %d %d", pixel.r, pixel.g, pixel.b);
-        }
+//         if (currentLine == 0 && x == 63) {
+//           Serial.printf("Pixel RGB %d %d %d", pixel.r, pixel.g, pixel.b);
+//         }
 
-        lineData.add(rgb2hex(pixel.r, pixel.g, pixel.b, true));
-      }
-    }
+//         lineData.add(rgb2hex(pixel.r, pixel.g, pixel.b, true));
+//       }
+//     }
 
-    String json;
-    serializeJson(doc, json);
-    ws.textAll(json);
-  }
-}
+//     String json;
+//     serializeJson(doc, json);
+//     ws.textAll(json);
+//   }
+// }
 
 // Convert 5-6-5 color to 32bit hex value
 String convert16BitTo32BitHexColor(uint16_t hexValue)
@@ -371,8 +377,8 @@ void resetWifi()
 {
   Serial.println("Reset WIFI settings!");
 
-  textLayer.clear();
-  textLayer.drawText("Reset", MIDDLE, NULL, timeColor, 6, -4);
+  // textLayer.clear();
+  // textLayer.drawText("Reset", MIDDLE, NULL, timeColor, 6, -4);
 
   // wifiManager.resetSettings();
   delay(1000);
@@ -506,7 +512,7 @@ void handleWebSocketMessage(void* arg, uint8_t* data, size_t len)
     } else if (isStringEqual(action, "compositionMode")) {
       compositionMode = doc["mode"];
     } else if (isStringEqual(action, "getPixels")) {
-      sendPixels();
+      // sendPixels();
     } else if (isStringEqual(action, "customData")) {
       JsonObject customData = doc["options"].as<JsonObject>();
       handleCustomData(customData);
@@ -570,22 +576,32 @@ void printTextItem(char text[], TextItem& t)
   //   textLayer.drawText(text, pos, &Picopixel, t.color, t.size, t.offsetX, t.offsetY, t.align);
   // }
 
-  matrix->setTextSize(1); // size 1 == 8 pixels high
-  matrix->setTextWrap(false); // Don't wrap at end of line - will do ourselves
+  if (pos == TOP) {
+    textLayer.setCursor(0, 0);
+  } else if (pos == BOTTOM) {
+    textLayer.setCursor(0, 24);
+  } else {
+    textLayer.setCursor(0, 16);
+  }
 
-  matrix->setCursor(5, 0); // start at top left, with 8 pixel of spacing
-  matrix->println(text);
+  textLayer.setTextSize(1); // size 1 == 8 pixels high
+  textLayer.setTextWrap(false); // Don't wrap at end of line - will do ourselves
+
+  // start at top left, with 8 pixel of spacing
+  textLayer.println(text);
 }
 
 void printText()
 {
   struct tm timeinfo;
 
+  textLayer.clear();
+
   if (!getLocalTime(&timeinfo)) {
     Serial.println("Failed to obtain time");
     return;
   }
-  textLayer.clear();
+  // textLayer.clear();
 
   for (TextItem t : textContent) {
     char parsedDate[32];
@@ -706,9 +722,9 @@ void handleCustomData()
     Serial.println("New data :)");
     Serial.println(data);
 
-    textLayer.clear();
-    textLayer.drawText(customDataServer, MIDDLE, NULL, timeColor, 2, -4);
-    textLayer.drawText(interval, BOTTOM, NULL, dateColor, 1, -2);
+    // textLayer.clear();
+    // textLayer.drawText(customDataServer, MIDDLE, NULL, timeColor, 2, -4);
+    // textLayer.drawText(interval, BOTTOM, NULL, dateColor, 1, -2);
   }
 }
 
@@ -763,61 +779,51 @@ void loop()
 {
   espConnect.loop();
 
-  if (millis() - lastLog > 5000) {
-    JsonDocument doc;
-    espConnect.toJson(doc.to<JsonObject>());
-    serializeJson(doc, Serial);
-    Serial.println();
-    lastLog = millis();
+  checkResetButton();
+
+  if (startupFinished == false) {
+    const String ip = WiFi.localIP().toString();
+
+    // Cannot use text layer here as we have a `delay` that blocks the rendering
+
+    textLayer.clear();
+    textLayer.setCursor(9, 13);
+    textLayer.setFont(&Picopixel);
+    textLayer.println(ip);
+
+    delay(6000);
+
+    startupFinished = true;
+  } else if (currentResetButtonState == LOW) {
+    char resetTimeString[16];
+    itoa(resetButtonPressDuration, resetTimeString, 10);
+    textLayer.clear();
+    textLayer.setCursor(0, 0);
+    textLayer.println("Reset");
+    textLayer.setCursor(0, 16);
+    textLayer.println(resetTimeString);
+  } else if (showText == true) {
+    printText();
+  } else if (customDataUpdateInterval > -1 && customDataServer != "") {
+    handleCustomData();
   }
-  // checkResetButton();
 
-  // if (startupFinished == false) {
-  //   const String ip = WiFi.localIP().toString();
+  ws.cleanupClients();
 
-  //   // Cannot use text layer here as we have a `delay` that blocks the rendering
-  //   matrix->clearScreen();
-  //   // matrix->setFont(&Picopixel);
-  //   // matrix->setCursor(9, 13);
-  //   // matrix->print(ip);
-
-  //   matrix->setTextSize(1); // size 1 == 8 pixels high
-  //   matrix->setTextWrap(false); // Don't wrap at end of line - will do ourselves
-
-  //   matrix->setCursor(5, 0); // start at top left, with 8 pixel of spacing
-  //   matrix->println("LED MATRIX!");
-
-  //   delay(6000);
-
-  //   startupFinished = true;
-  // } else if (currentResetButtonState == LOW) {
-  //   char resetTimeString[16];
-  //   itoa(resetButtonPressDuration, resetTimeString, 10);
-  //   textLayer.clear();
-  //   textLayer.drawText("Reset", MIDDLE, NULL, timeColor, 2, 1);
-  //   textLayer.drawText(resetTimeString, BOTTOM, NULL, dateColor, 1, -2);
-  // } else if (showText == true) {
-  //   printText();
-  // } else if (customDataUpdateInterval > -1 && customDataServer != "") {
-  //   handleCustomData();
-  // }
-
-  // ws.cleanupClients();
-
-  // // switch (compositionMode) {
-  // // case 0:
-  // //   LayerCompositor::Stack(matrix, bgLayer, textLayer);
-  // //   break;
-  // //   case 1:
-  // //     LayerCompositor::Blend(*matrix, bgLayer, textLayer);
-  // //     break;
-  // //   case 2:
-  // //     LayerCompositor::Siloette(*matrix, bgLayer, textLayer);
-  // //     break;
-  // //   default:
-  // //     LayerCompositor::Stack(*matrix, bgLayer, textLayer);
-  // //     break;
-  // // }
+  switch (compositionMode) {
+  case 0:
+    gfx_compositor.Stack(bgLayer, textLayer);
+    break;
+  case 1:
+    gfx_compositor.Blend(bgLayer, textLayer);
+    break;
+  case 2:
+    gfx_compositor.Siloette(bgLayer, textLayer);
+    break;
+  default:
+    gfx_compositor.Stack(bgLayer, textLayer);
+    break;
+  }
 
   // // Check if WiFi is connected
   // if (millis() - lastWiFiCheck > 30000) {
@@ -829,5 +835,5 @@ void loop()
   //   }
   // }
 
-  // delay(100);
+  delay(100);
 }
