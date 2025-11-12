@@ -1,14 +1,14 @@
 #pragma once
 
 // WiFi Portal Configuration
-const char* ntpServer = "at.pool.ntp.org";
-const char* portalIP = "10.0.1.1";
+extern const char* ntpServer;
+extern const char* portalIP;
 
 // Time and Locale Settings
 // https://ftp.fau.de/aminet/util/time/tzinfo.txt
-const char* timezone = "CET-1CEST,M3.5.0,M10.5.0/3";
-const char* locale = "en_US.UTF-8";
-const char* hostname = "pixelclock";
+extern const char* timezone;
+extern const char* locale;
+extern const char* hostname;
 
 // Display Settings
 const int MAX_BRIGHTNESS = 15;
