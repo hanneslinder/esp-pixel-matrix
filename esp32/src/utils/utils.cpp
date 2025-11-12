@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <FastLED_Lite.h>
 #include <sstream>
 
 bool isStringEqual(const char* string1, const char* string2)
@@ -39,4 +40,23 @@ std::string convertRgbToHex(int r, int g, int b, bool with_head)
   }
 
   return hex;
+}
+
+CRGB hexToCRGB(const std::string& hex)
+{
+  unsigned int r, g, b;
+  if (hex[0] == '#') {
+    std::stringstream ss;
+    ss << std::hex << hex.substr(1); // Skip '#'
+    unsigned int hexValue;
+    ss >> hexValue;
+
+    r = (hexValue >> 16) & 0xFF;
+    g = (hexValue >> 8) & 0xFF;
+    b = hexValue & 0xFF;
+  } else {
+    r = g = b = 40; // fallback
+  }
+
+  return CRGB(r, g, b);
 }

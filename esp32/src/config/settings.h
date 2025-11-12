@@ -12,7 +12,7 @@ const char* hostname = "pixelclock";
 
 // Display Settings
 const int MAX_BRIGHTNESS = 15;
-const int DEFAULT_BRIGHTNESS = 2;
+const int DEFAULT_BRIGHTNESS = 1;
 
 // Reset Button Settings
 const int RESET_SHORT_PRESS_TIME = 2000;

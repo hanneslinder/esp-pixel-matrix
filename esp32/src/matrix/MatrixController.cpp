@@ -26,14 +26,18 @@ void MatrixController::begin()
       { R1_PIN, G1_PIN, B1_PIN, R2_PIN, G2_PIN, B2_PIN, A_PIN, B_PIN, C_PIN, D_PIN, E_PIN, LAT_PIN,
           OE_PIN, CLK_PIN });
 
+  mxconfig.i2sspeed = HUB75_I2S_CFG::HZ_20M;
+  mxconfig.min_refresh_rate = 60;
+
   matrix = new MatrixPanel_I2S_DMA(mxconfig);
   matrix->begin();
-  matrix->setBrightness8(10);
+
+  matrix->setBrightness8(3);
 
   bgLayer.clear();
   textLayer.clear();
 
-  textLayer.drawCentreText("starting up...", MIDDLE, &Picopixel, textLayer.color565(255, 0, 0), 0);
+  MatrixController::drawText("Starting up...", MIDDLE, &Picopixel, 0xFFFF, 1, 0, 0, 1);
 
   gfx_compositor.Stack(bgLayer, textLayer);
 }

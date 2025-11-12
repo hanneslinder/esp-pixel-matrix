@@ -50,9 +50,18 @@ uint16_t timeColor = 0xFFFF;
 uint16_t dateColor = 0xFFFF;
 
 int compositionMode = 0;
-int brightness = 2;
+int brightness = DEFAULT_BRIGHTNESS;
+
+// Mutable copies for runtime configuration
+char currentTimezone[64];
+char currentLocale[32];
 
 static unsigned long lastWiFiCheck = 0;
+static int wifiReconnectAttempts = 0;
+static const int MAX_WIFI_RECONNECT_ATTEMPTS = 5;
+static unsigned long wifiReconnectStartTime = 0;
+static unsigned long lastHeapCheck = 0;
+static size_t minFreeHeap = SIZE_MAX;
 
 struct TextItem {
   char text[32];
@@ -125,6 +134,8 @@ void handleDrawImageMessage(JsonArray data)
 
     const uint16_t c = strtol(d, NULL, 16);
     matrix.getBackgroundLayer().drawPixel(x, y, c);
+
+    // matrix.getBackgroundLayer().drawPixel(x, y, hexToCRGB(d));
 
     if (x == 63) {
       row++;
@@ -204,8 +215,8 @@ void sendState()
   doc["customDataInterval"] = customDataUpdateInterval;
   doc["compositionMode"] = compositionMode;
   doc["brightness"] = brightness;
-  doc["timezone"] = timezone;
-  doc["locale"] = locale;
+  doc["timezone"] = currentTimezone;
+  doc["locale"] = currentLocale;
 
   for (TextItem t : textContent) {
     if (strcmp(t.text, "") != 0) {
@@ -234,7 +245,7 @@ void handleCustomData(JsonObject customData)
 
     if (customData["server"] != 0) {
       String s = customData["server"];
-      strcpy(customDataServer, s.c_str());
+      strlcpy(customDataServer, s.c_str(), sizeof(customDataServer));
 
       Serial.println("Enabled custom data");
       Serial.println(customDataServer);
@@ -261,8 +272,8 @@ void resetWifi()
 // OTA UPDATE HANDLING START
 void handleUpdate(AsyncWebServerRequest* request)
 {
-  char* html = "<form method='POST' action='/doUpdate' enctype='multipart/form-data'><input "
-               "type='file' name='update'><input type='submit' value='Update'></form>";
+  const char* html = "<form method='POST' action='/doUpdate' enctype='multipart/form-data'><input "
+                     "type='file' name='update'><input type='submit' value='Update'></form>";
   request->send(200, "text/html", html);
 }
 
@@ -328,15 +339,15 @@ void printUpdateProgress(size_t prg, size_t sz)
 
 void setLocale()
 {
-  if (setlocale(LC_ALL, locale) == NULL) {
-    Serial.printf("Unable to set locale %s", locale);
+  if (setlocale(LC_ALL, currentLocale) == NULL) {
+    Serial.printf("Unable to set locale %s", currentLocale);
     return;
   }
 
-  std::setlocale(LC_TIME, locale);
-  std::setlocale(LC_NUMERIC, locale);
+  std::setlocale(LC_TIME, currentLocale);
+  std::setlocale(LC_NUMERIC, currentLocale);
 
-  Serial.printf("Set locale to %s", locale);
+  Serial.printf("Set locale to %s", currentLocale);
 }
 
 // OTA UPDATE HANDLING END
@@ -383,7 +394,7 @@ void handleWebSocketMessage(void* arg, uint8_t* data, size_t len)
     } else if (isStringEqual(action, "compositionMode")) {
       compositionMode = doc["mode"];
     } else if (isStringEqual(action, "getPixels")) {
-      // sendPixels();
+      sendPixels();
     } else if (isStringEqual(action, "customData")) {
       JsonObject customData = doc["options"].as<JsonObject>();
       handleCustomData(customData);
@@ -393,28 +404,47 @@ void handleWebSocketMessage(void* arg, uint8_t* data, size_t len)
       resetWifi();
     } else if (isStringEqual(action, "setBrightness")) {
       brightness = doc["brightness"].as<int>();
-      // matrix->setPanelBrightness(min(brightness, MAX_BRIGHTNESS));
       matrix.setBrightness(min(brightness, MAX_BRIGHTNESS));
+      Serial.print("Set rightness to ");
+      Serial.println(brightness);
     } else if (isStringEqual(action, "setText")) {
       JsonArray text = doc["text"].as<JsonArray>();
       setText(text);
     } else if (isStringEqual(action, "setTimeZone")) {
-      timezone = doc["timezone"];
+      const char* tz = doc["timezone"];
+      strlcpy(currentTimezone, tz, sizeof(currentTimezone));
+      configTzTime(currentTimezone, ntpServer);
+      Serial.printf("Timezone updated to: %s\n", currentTimezone);
     } else if (isStringEqual(action, "setLocale")) {
-      locale = doc["locale"];
+      const char* loc = doc["locale"];
+      strlcpy(currentLocale, loc, sizeof(currentLocale));
       setLocale();
     }
   } else {
     // Multi packet message,
     // wait until whole message is transmitted before attempt to draw image
+
+    // Add bounds checking to prevent buffer overflow
+    if (currSocketBufferIndex + len > SOCKET_DATA_SIZE) {
+      Serial.println("ERROR: WebSocket buffer overflow detected! Resetting buffer.");
+      currSocketBufferIndex = 0;
+      socketData[0] = 0;
+      return;
+    }
+
     for (size_t i = 0; i < len; i++) {
       socketData[currSocketBufferIndex] = data[i];
       currSocketBufferIndex++;
     }
 
-    Serial.println("Multi packet data");
+    Serial.printf("Multi packet data: received %d/%d bytes\n", currSocketBufferIndex, info->len);
 
     if (currSocketBufferIndex >= info->len) {
+      // Null-terminate the buffer for safety
+      if (currSocketBufferIndex < SOCKET_DATA_SIZE) {
+        socketData[currSocketBufferIndex] = '\0';
+      }
+
       const size_t capacity = 48000;
       JsonDocument doc;
       DeserializationError error = deserializeJson(doc, socketData);
@@ -422,6 +452,9 @@ void handleWebSocketMessage(void* arg, uint8_t* data, size_t len)
       if (error) {
         Serial.print(F("deserializeJson for large message failed: "));
         Serial.println(error.f_str());
+        // Reset buffer on error
+        memset(socketData, 0, SOCKET_DATA_SIZE);
+        currSocketBufferIndex = 0;
         return;
       }
 
@@ -431,9 +464,11 @@ void handleWebSocketMessage(void* arg, uint8_t* data, size_t len)
         JsonArray data = doc["data"].as<JsonArray>();
 
         handleDrawImageMessage(data);
-        socketData[0] = 0;
-        currSocketBufferIndex = 0;
       }
+
+      // Always reset buffer after processing
+      memset(socketData, 0, SOCKET_DATA_SIZE);
+      currSocketBufferIndex = 0;
     }
   }
 }
@@ -471,6 +506,11 @@ void initWebSocket()
 {
   ws.onEvent(onEvent);
   server.addHandler(&ws);
+
+  // Configure WebSocket for better stability
+  ws.enable(true);
+
+  Serial.println("WebSocket initialized with safety limits");
 }
 
 String processHtmlTemplate(const String& var)
@@ -621,6 +661,33 @@ void checkResetButton()
   lastResetButtonState = currentResetButtonState;
 }
 
+void checkHeapAndLog()
+{
+  size_t freeHeap = ESP.getFreeHeap();
+  size_t heapSize = ESP.getHeapSize();
+  size_t minHeap = ESP.getMinFreeHeap();
+
+  if (freeHeap < minFreeHeap) {
+    minFreeHeap = freeHeap;
+  }
+
+  Serial.println("=== System Status ===");
+  Serial.printf("Free Heap: %u bytes (%.1f%%)\n", freeHeap, (freeHeap * 100.0) / heapSize);
+  Serial.printf("Min Free Heap: %u bytes\n", minHeap);
+  Serial.printf("Heap Size: %u bytes\n", heapSize);
+  Serial.printf("WiFi Status: %s (RSSI: %d dBm)\n",
+      WiFi.status() == WL_CONNECTED ? "Connected" : "Disconnected",
+      WiFi.status() == WL_CONNECTED ? WiFi.RSSI() : 0);
+  Serial.printf("WebSocket Clients: %u\n", ws.count());
+  Serial.printf("Uptime: %lu seconds\n", millis() / 1000);
+  Serial.println("====================");
+
+  // Warning if heap is getting low
+  if (freeHeap < 30000) {
+    Serial.println("WARNING: Low heap memory! System may become unstable.");
+  }
+}
+
 void setup()
 {
   Serial.begin(115200);
@@ -636,7 +703,9 @@ void setup()
   pinMode(RESET_PIN, INPUT_PULLUP);
   socketData = (char*)malloc(SOCKET_DATA_SIZE * sizeof(char));
 
-  initMatrix();
+  // Initialize mutable configuration with defaults
+  strlcpy(currentTimezone, timezone, sizeof(currentTimezone));
+  strlcpy(currentLocale, locale, sizeof(currentLocale));
 
   if (useCaptivePortal == true) {
     initCaptivePortal();
@@ -644,12 +713,14 @@ void setup()
     connectToWiFi();
   }
 
+  initMatrix();
+
   initWebServer();
   initWebSocket();
 
   // Set timezone
-  if (timezone != NULL) {
-    Serial.printf("Setting timezone to %s\n", timezone);
+  if (currentTimezone != NULL) {
+    Serial.printf("Setting timezone to %s\n", currentTimezone);
   } else {
     Serial.println("Timezone not set");
   }
@@ -659,7 +730,7 @@ void setup()
   } else {
     Serial.println("NTP server not set");
   }
-  configTzTime(timezone, ntpServer);
+  configTzTime(currentTimezone, ntpServer);
 
   // WiFi.setSleep(false);
 }
@@ -675,12 +746,7 @@ void loop()
   if (startupFinished == false) {
     const String ip = WiFi.localIP().toString();
 
-    // Cannot use text layer here as we have a `delay` that blocks the rendering
-
-    matrix.getTextLayer().clear();
-    matrix.getTextLayer().setCursor(9, 13);
-    matrix.getTextLayer().setFont(&Picopixel);
-    matrix.getTextLayer().println(ip);
+    matrix.drawText(ip.c_str(), MIDDLE, &Picopixel, 0xFFFF, 1, 0, 0, 1);
 
     delay(6000);
 
@@ -695,7 +761,7 @@ void loop()
     matrix.getTextLayer().println(resetTimeString);
   } else if (showText == true) {
     printText();
-  } else if (customDataUpdateInterval > -1 && customDataServer != "") {
+  } else if (customDataUpdateInterval > -1 && strlen(customDataServer) > 0) {
     handleCustomData();
   }
 
@@ -703,13 +769,58 @@ void loop()
 
   matrix.render(compositionMode);
 
-  // // Check if WiFi is connected
+  // Periodic heap and system status monitoring (every 5 minutes)
+  if (millis() - lastHeapCheck > 300000) {
+    lastHeapCheck = millis();
+    checkHeapAndLog();
+  }
+
+  // Check if WiFi is connected with robust reconnection logic
   if (millis() - lastWiFiCheck > 30000) {
     lastWiFiCheck = millis();
+
     if (WiFi.status() != WL_CONNECTED) {
-      Serial.println("WiFi disconnected, reconnecting...");
-      WiFi.disconnect();
-      WiFi.reconnect();
+      Serial.println("WiFi disconnected, attempting reconnection...");
+
+      if (wifiReconnectAttempts == 0) {
+        wifiReconnectStartTime = millis();
+      }
+
+      wifiReconnectAttempts++;
+      Serial.printf(
+          "Reconnection attempt %d/%d\n", wifiReconnectAttempts, MAX_WIFI_RECONNECT_ATTEMPTS);
+
+      if (wifiReconnectAttempts >= MAX_WIFI_RECONNECT_ATTEMPTS) {
+        // If multiple reconnect attempts failed, try full re-initialization
+        Serial.println(
+            "Multiple reconnect attempts failed, performing full WiFi re-initialization...");
+        WiFi.disconnect(true);
+        delay(1000);
+        WiFi.mode(WIFI_STA);
+
+        if (useCaptivePortal == true) {
+          Serial.println("Restarting ESP to reinitialize captive portal...");
+          ESP.restart();
+        } else {
+          WiFi.begin(ssid, password);
+        }
+
+        wifiReconnectAttempts = 0;
+        wifiReconnectStartTime = 0;
+      } else {
+        // Try simple reconnect first
+        WiFi.disconnect();
+        delay(100);
+        WiFi.reconnect();
+      }
+    } else {
+      // WiFi is connected, reset reconnect counter
+      if (wifiReconnectAttempts > 0) {
+        Serial.printf("WiFi reconnected successfully after %d attempts (took %lu ms)\n",
+            wifiReconnectAttempts, millis() - wifiReconnectStartTime);
+        wifiReconnectAttempts = 0;
+        wifiReconnectStartTime = 0;
+      }
     }
   }
 
