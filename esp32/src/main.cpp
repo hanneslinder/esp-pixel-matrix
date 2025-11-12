@@ -19,12 +19,12 @@
 #include "config/secrets.h"
 #include "config/settings.h"
 #include "matrix/MatrixController.h"
+#include "ota/OTAUpdateHandler.h"
 #include "utils/utils.h"
 
 #define U_PART U_SPIFFS
 
-size_t updateContentLength;
-int lastUpdateProgress = 0;
+// Moved OTA progress state into OTAUpdate module
 
 MatrixController matrix;
 
@@ -97,15 +97,32 @@ void onEvent(AsyncWebSocket* server, AsyncWebSocketClient* client, AwsEventType 
   case WS_EVT_CONNECT:
     Serial.printf("WebSocket client #%u connected from %s\n", client->id(),
         client->remoteIP().toString().c_str());
+    // Reset buffer state on new connection
+    currSocketBufferIndex = 0;
+    if (socketData != NULL) {
+      socketData[0] = '\0';
+    }
     break;
   case WS_EVT_DISCONNECT:
     Serial.printf("WebSocket client #%u disconnected\n", client->id());
+    // Clean up buffer state on disconnect
+    currSocketBufferIndex = 0;
+    if (socketData != NULL) {
+      socketData[0] = '\0';
+    }
     break;
   case WS_EVT_DATA:
     handleWebSocketMessage(arg, data, len);
     break;
   case WS_EVT_PONG:
+    break;
   case WS_EVT_ERROR:
+    Serial.printf("WebSocket error for client #%u\n", client->id());
+    // Reset buffer on error
+    currSocketBufferIndex = 0;
+    if (socketData != NULL) {
+      socketData[0] = '\0';
+    }
     break;
   }
 }
@@ -270,72 +287,7 @@ void resetWifi()
 }
 
 // OTA UPDATE HANDLING START
-void handleUpdate(AsyncWebServerRequest* request)
-{
-  const char* html = "<form method='POST' action='/doUpdate' enctype='multipart/form-data'><input "
-                     "type='file' name='update'><input type='submit' value='Update'></form>";
-  request->send(200, "text/html", html);
-}
-
-void handleDoUpdate(AsyncWebServerRequest* request, const String& filename, size_t index,
-    uint8_t* data, size_t len, bool final)
-{
-  if (!index) {
-    Serial.println("Update");
-    updateContentLength = request->contentLength();
-    // if filename includes spiffs, update the spiffs partition
-    int cmd = (filename.indexOf("spiffs") > -1) ? U_PART : U_FLASH;
-
-    if (!Update.begin(UPDATE_SIZE_UNKNOWN, cmd)) {
-      Update.printError(Serial);
-    }
-  }
-
-  if (Update.write(data, len) != len) {
-    Update.printError(Serial);
-  }
-
-  if (final) {
-    AsyncWebServerResponse* response = request->beginResponse(200, "text/plain", "updatefinished");
-    response->addHeader("Refresh", "20");
-    response->addHeader("Location", "/");
-    request->send(response);
-
-    if (!Update.end(true)) {
-      Update.printError(Serial);
-    } else {
-      JsonDocument doc;
-      doc["action"] = "updateProgress";
-      doc["progress"] = 100;
-
-      String json;
-      serializeJson(doc, json);
-      ws.textAll(json);
-
-      Serial.println("Update complete");
-      Serial.flush();
-      ESP.restart();
-    }
-  }
-}
-
-void printUpdateProgress(size_t prg, size_t sz)
-{
-  int progress = (prg * 100) / updateContentLength;
-  Serial.printf("Progress: %d%%\n", progress);
-
-  if (progress == 0 || progress - lastUpdateProgress >= 5 || progress >= 99) {
-    JsonDocument doc;
-    doc["action"] = "updateProgress";
-    doc["progress"] = progress;
-
-    String json;
-    serializeJson(doc, json);
-    ws.textAll(json);
-
-    lastUpdateProgress = progress;
-  }
-}
+// OTA-specific handlers moved to ota/OTAUpdateHandler.{h,cpp}
 
 void setLocale()
 {
@@ -355,6 +307,18 @@ void setLocale()
 void handleWebSocketMessage(void* arg, uint8_t* data, size_t len)
 {
   AwsFrameInfo* info = (AwsFrameInfo*)arg;
+
+  // Validate frame info to detect corruption
+  if (info->len > SOCKET_DATA_SIZE || info->len == 0) {
+    Serial.printf("ERROR: Invalid frame length detected: %u bytes (max: %d). Likely corrupted "
+                  "frame, resetting buffer.\n",
+        info->len, SOCKET_DATA_SIZE);
+    currSocketBufferIndex = 0;
+    if (socketData != NULL) {
+      socketData[0] = '\0';
+    }
+    return;
+  }
 
   // Data fit into one packet
   if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT) {
@@ -431,51 +395,85 @@ void handleWebSocketMessage(void* arg, uint8_t* data, size_t len)
     // Multi packet message,
     // wait until whole message is transmitted before attempt to draw image
 
+    // First chunk - validate and reset if needed
+    if (info->index == 0) {
+      Serial.printf("Starting new multi-packet message: total expected %u bytes\n", info->len);
+
+      // Validate expected total length
+      if (info->len > SOCKET_DATA_SIZE) {
+        Serial.printf(
+            "ERROR: Expected message size %u exceeds buffer size %d. Rejecting message.\n",
+            info->len, SOCKET_DATA_SIZE);
+        currSocketBufferIndex = 0;
+        return;
+      }
+
+      // Reset buffer for new message
+      currSocketBufferIndex = 0;
+      if (socketData != NULL) {
+        socketData[0] = '\0';
+      }
+    }
+
     // Add bounds checking to prevent buffer overflow
     if (currSocketBufferIndex + len > SOCKET_DATA_SIZE) {
-      Serial.println("ERROR: WebSocket buffer overflow detected! Resetting buffer.");
+      Serial.printf("ERROR: WebSocket buffer overflow detected! Curr: %d + New: %d > Max: %d. "
+                    "Resetting buffer.\n",
+          currSocketBufferIndex, len, SOCKET_DATA_SIZE);
       currSocketBufferIndex = 0;
-      socketData[0] = 0;
+      socketData[0] = '\0';
       return;
     }
 
-    for (size_t i = 0; i < len; i++) {
-      socketData[currSocketBufferIndex] = data[i];
-      currSocketBufferIndex++;
-    }
+    // Copy data to buffer
+    memcpy(socketData + currSocketBufferIndex, data, len);
+    currSocketBufferIndex += len;
 
-    Serial.printf("Multi packet data: received %d/%d bytes\n", currSocketBufferIndex, info->len);
+    Serial.printf("Multi packet data: received %d/%u bytes (%.1f%%)\n", currSocketBufferIndex,
+        info->len, (currSocketBufferIndex * 100.0) / info->len);
 
-    if (currSocketBufferIndex >= info->len) {
+    // Check if we've received the complete message
+    if (info->final && currSocketBufferIndex >= info->len) {
+      Serial.printf("Complete message received: %d bytes\n", currSocketBufferIndex);
+
       // Null-terminate the buffer for safety
       if (currSocketBufferIndex < SOCKET_DATA_SIZE) {
         socketData[currSocketBufferIndex] = '\0';
       }
 
-      const size_t capacity = 48000;
-      JsonDocument doc;
-      DeserializationError error = deserializeJson(doc, socketData);
+      // Use DynamicJsonDocument with calculated size for better memory management
+      const size_t capacity = JSON_ARRAY_SIZE(2048) + JSON_OBJECT_SIZE(10) + currSocketBufferIndex;
+      DynamicJsonDocument doc(capacity);
+
+      DeserializationError error = deserializeJson(doc, socketData, currSocketBufferIndex);
 
       if (error) {
-        Serial.print(F("deserializeJson for large message failed: "));
-        Serial.println(error.f_str());
+        Serial.printf("deserializeJson for large message failed: %s (size: %d bytes)\n",
+            error.c_str(), currSocketBufferIndex);
+        Serial.printf("Free heap before parse: %u bytes\n", ESP.getFreeHeap());
+
         // Reset buffer on error
-        memset(socketData, 0, SOCKET_DATA_SIZE);
         currSocketBufferIndex = 0;
+        socketData[0] = '\0';
         return;
       }
 
       const char* action = doc["action"];
+      Serial.printf("Processing action: %s\n", action);
 
       if (isStringEqual(action, "drawImage")) {
         JsonArray data = doc["data"].as<JsonArray>();
-
         handleDrawImageMessage(data);
       }
 
       // Always reset buffer after processing
-      memset(socketData, 0, SOCKET_DATA_SIZE);
       currSocketBufferIndex = 0;
+      socketData[0] = '\0';
+
+      Serial.println("Multi-packet message processed successfully");
+    } else if (!info->final) {
+      // More packets expected
+      Serial.println("Waiting for more packets...");
     }
   }
 }
@@ -542,15 +540,8 @@ void initWebServer()
 
   server.serveStatic("/main.js", SPIFFS, "/main.js").setCacheControl("max-age=14400");
 
-  // Firmware update route
-  server.on("/update", HTTP_GET, [](AsyncWebServerRequest* request) { handleUpdate(request); });
-
-  server.on(
-      "/doUpdate", HTTP_POST, [](AsyncWebServerRequest* request) {},
-      [](AsyncWebServerRequest* request, const String& filename, size_t index, uint8_t* data,
-          size_t len, bool final) { handleDoUpdate(request, filename, index, data, len, final); });
-
-  Update.onProgress(printUpdateProgress);
+  // OTA routes and progress callbacks are installed by the OTAUpdate module
+  OTAUpdate::init(server, ws);
 
   server.begin();
 }

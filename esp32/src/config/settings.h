@@ -19,4 +19,6 @@ const int DEFAULT_BRIGHTNESS = 3;
 const int RESET_SHORT_PRESS_TIME = 2000;
 
 // WebSocket Settings
-const int SOCKET_DATA_SIZE = 48000;
+// Buffer size for WebSocket messages (must accommodate full image data + JSON overhead)
+// 64x32 pixels * 6 bytes per pixel (hex color) + JSON structure ≈ 12KB + overhead
+const int SOCKET_DATA_SIZE = 32768; // 32KB should be sufficient for 64x32 images
