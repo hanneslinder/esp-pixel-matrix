@@ -32,6 +32,8 @@ void MatrixController::begin()
   matrix = new MatrixPanel_I2S_DMA(mxconfig);
   matrix->begin();
 
+  // Start with minimum safe brightness (will be set from settings in main.cpp)
+  // Values below 3 often don't work with HUB75 panels
   matrix->setBrightness8(3);
 
   bgLayer.clear();
@@ -45,7 +47,11 @@ void MatrixController::begin()
 void MatrixController::setBrightness(uint8_t brightness)
 {
   if (matrix) {
+    Serial.printf("MatrixController::setBrightness called with value: %d\n", brightness);
     matrix->setBrightness8(brightness);
+    Serial.printf("setBrightness8(%d) completed\n", brightness);
+  } else {
+    Serial.println("ERROR: Matrix is null, cannot set brightness!");
   }
 }
 

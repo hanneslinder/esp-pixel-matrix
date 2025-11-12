@@ -404,9 +404,16 @@ void handleWebSocketMessage(void* arg, uint8_t* data, size_t len)
       resetWifi();
     } else if (isStringEqual(action, "setBrightness")) {
       brightness = doc["brightness"].as<int>();
-      matrix.setBrightness(min(brightness, MAX_BRIGHTNESS));
-      Serial.print("Set rightness to ");
-      Serial.println(brightness);
+      int clampedBrightness = max(MIN_BRIGHTNESS, min(brightness, MAX_BRIGHTNESS));
+
+      if (brightness < MIN_BRIGHTNESS) {
+        Serial.printf("Warning: Brightness %d is below minimum %d, setting to %d\n", brightness,
+            MIN_BRIGHTNESS, clampedBrightness);
+      }
+
+      Serial.printf("setBrightness: requested=%d, actual=%d (range: %d-%d)\n", brightness,
+          clampedBrightness, MIN_BRIGHTNESS, MAX_BRIGHTNESS);
+      matrix.setBrightness(clampedBrightness);
     } else if (isStringEqual(action, "setText")) {
       JsonArray text = doc["text"].as<JsonArray>();
       setText(text);
@@ -714,6 +721,10 @@ void setup()
   }
 
   initMatrix();
+
+  // Apply default brightness from settings
+  matrix.setBrightness(brightness);
+  Serial.printf("Set initial brightness to %d\n", brightness);
 
   initWebServer();
   initWebSocket();
