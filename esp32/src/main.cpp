@@ -22,6 +22,7 @@
 #include "input/ResetButtonHandler.h"
 #include "matrix/MatrixController.h"
 #include "ota/OTAUpdateHandler.h"
+#include "server/WebServerHandler.h"
 #include "types/CommonTypes.h"
 #include "utils/utils.h"
 #include "websocket/WebSocketHandler.h"
@@ -76,6 +77,7 @@ AsyncWebSocket ws("/ws");
 WiFiConnectionHandler wifiHandler(server);
 ResetButtonHandler resetButton(RESET_PIN, RESET_SHORT_PRESS_TIME);
 TextDisplayHandler textDisplay(matrix, textContent, 5);
+WebServerHandler webServer(server, ws);
 
 void initMatrix() { matrix.begin(); }
 
@@ -115,34 +117,6 @@ void initWebSocket()
       SOCKET_DATA_SIZE, &textDisplay);
 
   Serial.println("WebSocket initialized with safety limits");
-}
-
-String processHtmlTemplate(const String& var)
-{
-  if (var == "websocketUrl") {
-    const String ip = WiFi.localIP().toString();
-    return ip;
-  }
-
-  return String();
-}
-
-void initWebServer()
-{
-  server.serveStatic("/", SPIFFS, "/").setCacheControl("max-age=14400");
-
-  server.on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
-    request->send(SPIFFS, "/index.html", String(), false, processHtmlTemplate);
-  });
-
-  server.serveStatic("/main.css", SPIFFS, "/main.css").setCacheControl("max-age=14400");
-
-  server.serveStatic("/main.js", SPIFFS, "/main.js").setCacheControl("max-age=14400");
-
-  // OTA routes and progress callbacks are installed by the OTAUpdate module
-  OTAUpdate::init(server, ws);
-
-  server.begin();
 }
 
 String httpGETRequest(const char* serverName)
@@ -246,8 +220,8 @@ void setup()
   matrix.setBrightness(brightness);
   Serial.printf("Set initial brightness to %d\n", brightness);
 
-  initWebServer();
   initWebSocket();
+  webServer.begin();
 
   // Set timezone
   if (currentTimezone != NULL) {
