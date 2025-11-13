@@ -129,6 +129,14 @@ body {
 	}
 }
 
+.lucide {
+	stroke-width: 1px;
+}
+
+.lucide.icon-clickable {
+	cursor: pointer;
+}
+
 input[type="text"] {
 	background: var(--color-dark-1);
 	color: var(--color-text);

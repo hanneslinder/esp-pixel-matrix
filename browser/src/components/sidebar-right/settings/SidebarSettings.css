@@ -37,6 +37,11 @@
 		}
 	}
 
+	.brightness-slider {
+		display: flex;
+		align-items: center;
+	}
+
 	input.save-new {
 		height: 40px;
 	}

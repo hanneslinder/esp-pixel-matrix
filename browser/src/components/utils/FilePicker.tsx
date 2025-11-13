@@ -1,10 +1,9 @@
 import React, { DragEvent, FormEvent } from "react";
 import { view } from "@risingstack/react-easy-state";
-import { SvgIcon } from "./SvgIcon";
 
-import "./FilePicker.less";
+import { ImagePlus } from "lucide-react";
 
-const iconAddFile = require("../../assets/cloud-plus.svg");
+import "./FilePicker.css";
 
 interface Props {
 	onFileDroppedOrSelected: (file: File) => void;
@@ -44,7 +43,7 @@ export const FilePicker: React.FC<Props> = view(({ onFileDroppedOrSelected, isFi
 
 	const renderInputHint = () => (
 		<>
-			<SvgIcon icon={iconAddFile} title="Select image" />
+			<ImagePlus title="Select image" />
 			<div className="sub-header">{label}</div>
 			<div>or</div>
 			<div className="file-picker">

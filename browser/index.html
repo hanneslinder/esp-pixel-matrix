@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8" />
+	<link rel="preconnect" href="https://fonts.gstatic.com">
+	<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;700&display=swap" rel="stylesheet">
+
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<meta name="color-scheme" content="light dark" />
+	<title>Pixelclock</title>
+
+	<script type="text/javascript">
+		window.version = "1.1.0";
+	</script>
+
+	<% if(isDev){ %>
+		<script type="text/javascript">
+			// Replace with your local esp32 IP address
+			window.websocketUrl = "192.168.1.228";
+		</script>
+		<% } else { %>
+			<script type="text/javascript">
+				// Placeholder - will be replaced with IP address of esp32 when being served
+				window.websocketUrl = "%websocketUrl%";
+			</script>
+			<% } %>
+</head>
+
+<body>
+	<div id="app"></div>
+	<script type="module" src="/src/index.tsx"></script>
+</body>
+
+</html>

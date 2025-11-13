@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useRef } from "react";
 import { HexColorPicker } from "react-colorful";
-import "./GradientColorPicker.less";
+import "./GradientColorPicker.css";
 
 interface Props {
 	onColor1Select: (color: string) => void;

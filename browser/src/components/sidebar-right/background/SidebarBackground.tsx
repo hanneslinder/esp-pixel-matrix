@@ -4,7 +4,7 @@ import { Canvas } from "../../canvas/Canvas";
 import { FilePicker } from "../../utils/FilePicker";
 import { RandomImageList } from "./RandomImageList";
 
-import "./SidebarBackground.less";
+import "./SidebarBackground.css";
 
 interface Props {
 	getCanvas: () => Canvas;

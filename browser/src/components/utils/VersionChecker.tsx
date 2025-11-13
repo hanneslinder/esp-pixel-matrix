@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { config } from "../../../config";
 import { Loader } from "./Loader";
 
-import "./VersionChecker.less";
+import "./VersionChecker.css";
 
 const localVersion = (window as any).version;
 interface Props {}

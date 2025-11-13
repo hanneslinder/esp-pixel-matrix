@@ -1,7 +1,7 @@
 import React from "react";
 import { SvgIcon } from "./SvgIcon";
 
-import "./IconButton.less";
+import "./IconButton.css";
 
 interface IconButtonProps extends React.HTMLProps<HTMLDivElement> {
 	icon: string;

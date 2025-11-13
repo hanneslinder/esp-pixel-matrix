@@ -1,5 +1,5 @@
 import React from "react";
 
-import "./Loader.less";
+import "./Loader.css";
 
 export const Loader = () => <div className="loader" />;

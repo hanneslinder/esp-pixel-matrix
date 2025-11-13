@@ -8,13 +8,8 @@
 
 	.icon-text-help {
 		margin-left: 10px;
-		opacity: 0.5;
 		cursor: pointer;
 		transition: opacity 0.3s ease;
-
-		svg {
-			width: 14px;
-		}
 
 		&:hover {
 			opacity: 1;

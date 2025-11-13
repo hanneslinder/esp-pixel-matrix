@@ -16,8 +16,8 @@ void WebServerHandler::begin()
     request->send(SPIFFS, "/index.html", String(), false, processHtmlTemplate);
   });
 
-  _server.serveStatic("/main.css", SPIFFS, "/main.css").setCacheControl("max-age=14400");
-  _server.serveStatic("/main.js", SPIFFS, "/main.js").setCacheControl("max-age=14400");
+  _server.serveStatic("/index.css", SPIFFS, "/index.css").setCacheControl("max-age=14400");
+  _server.serveStatic("/index.js", SPIFFS, "/index.js").setCacheControl("max-age=14400");
 
   OTAUpdate::init(_server, _ws);
 

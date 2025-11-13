@@ -1,46 +1,47 @@
 import { view } from "@risingstack/react-easy-state";
-import React from "react";
 import { appState } from "../../state/appState";
-import { SvgIcon } from "../utils/SvgIcon";
+import { Brush, Type, Image, Settings } from "lucide-react";
 
-const iconBrush = require("../../assets/brush.svg");
-const iconBackground = require("../../assets/card-image.svg");
-const iconText = require("../../assets/fonts.svg");
-const iconSettings = require("../../assets/sliders.svg");
-
-import "./SidebarLeft.less";
+import "./SidebarLeft.css";
 
 export const enum SidebarLeftItem {
-	Draw = "Draw",
-	Text = "Text",
-	Background = "Background",
-	Settings = "Settings",
+  Draw = "Draw",
+  Text = "Text",
+  Background = "Background",
+  Settings = "Settings",
 }
 
 interface Props {}
 
 export const SidebarLeft = view((props: Props) => {
-	const items = [
-		{ label: SidebarLeftItem.Draw, icon: iconBrush },
-		{ label: SidebarLeftItem.Text, icon: iconText },
-		{ label: SidebarLeftItem.Background, icon: iconBackground },
-		{ label: SidebarLeftItem.Settings, icon: iconSettings },
-	];
+  const items = [
+    { label: SidebarLeftItem.Draw, icon: <Brush /> },
+    { label: SidebarLeftItem.Text, icon: <Type /> },
+    { label: SidebarLeftItem.Background, icon: <Image /> },
+    { label: SidebarLeftItem.Settings, icon: <Settings /> },
+  ];
 
-	const setItemActive = (item: SidebarLeftItem) => (appState.sidebarLeft.selected = item);
+  const setItemActive = (item: SidebarLeftItem) =>
+    (appState.sidebarLeft.selected = item);
 
-	return (
-		<div className="sidebar-left-content">
-			{items.map((item) => {
-				const className = `sidebar-icon ${appState.sidebarLeft.selected === item.label ? "is-active" : ""}`;
+  return (
+    <div className="sidebar-left-content">
+      {items.map((item) => {
+        const className = `sidebar-icon ${
+          appState.sidebarLeft.selected === item.label ? "is-active" : ""
+        }`;
 
-				return (
-					<div key={item.label} className={className} onClick={() => setItemActive(item.label)}>
-						<SvgIcon icon={item.icon} />
-						<div>{item.label}</div>
-					</div>
-				);
-			})}
-		</div>
-	);
+        return (
+          <div
+            key={item.label}
+            className={className}
+            onClick={() => setItemActive(item.label)}
+          >
+            <div>{item.icon}</div>
+            <div>{item.label}</div>
+          </div>
+        );
+      })}
+    </div>
+  );
 });

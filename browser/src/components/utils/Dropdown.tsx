@@ -1,10 +1,8 @@
 import React, { useRef, useState } from "react";
 import { useOnClickOutside } from "../../utils/hooks";
+import { ChevronDown } from "lucide-react";
 
-import "./Dropdown.less";
-import { SvgIcon } from "./SvgIcon";
-
-const iconChevron = require("../../assets/chevron-down.svg");
+import "./Dropdown.css";
 
 export interface DropdownItem {
 	value: any;
@@ -37,7 +35,7 @@ export const Dropdown: React.FC<Props> = ({ items, selected, onSelect }) => {
 		<div className={`dropdown ${open ? "is-open" : ""}`} ref={ref}>
 			<div className="dropdown-selected" onClick={() => setOpen(!open)}>
 				<span>{selectedItem.label}</span>
-				<SvgIcon icon={iconChevron} />
+				<ChevronDown />
 			</div>
 			<div className="dropdown-list" style={{ height: `${items.length * 30}px` }}>
 				{items.map((item) => (

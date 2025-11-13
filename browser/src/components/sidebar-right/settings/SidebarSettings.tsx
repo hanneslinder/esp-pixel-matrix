@@ -10,7 +10,7 @@ import { getSocket, IncommingMessageType } from "../../../Websocket";
 import { StateFromRemote } from "../../../utils/storage";
 import { appState } from "../../../state/appState";
 
-import "./SidebarSettings.less";
+import "./SidebarSettings.css";
 
 interface Props {
 	getCanvas: () => Canvas;
@@ -20,6 +20,7 @@ interface Props {
 const onRemoteStateReceived = (state: StateFromRemote) => {
 	Object.keys(state).forEach((key: keyof StateFromRemote) => {
 		(appState[key] as any) = state[key];
+		console.log("Updated appState from remote:", key, state[key]);
 	});
 };
 

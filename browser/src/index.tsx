@@ -1,14 +1,13 @@
 import React, { useRef } from "react";
 import ReactDOM from "react-dom";
 import { view } from "@risingstack/react-easy-state";
-import { observe } from "@nx-js/observer-util";
 
 import { CanvasWrapper, CanvasWrapperElement } from "./components/canvas/CanvasWrapper";
 import { Header } from "./components/Header";
 import { SidebarRight } from "./components/sidebar-right/SidebarRight";
 import { SidebarLeft } from "./components/sidebar-left/SidebarLeft";
 
-import "./index.less";
+import "./index.css";
 
 const App = view(() => {
 	const canvasWrapperRef = useRef<CanvasWrapperElement>(null);

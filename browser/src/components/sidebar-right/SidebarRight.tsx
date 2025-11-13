@@ -8,7 +8,7 @@ import { SidebarText } from "./text/SidebarText";
 import { SidebarSettings } from "./settings/SidebarSettings";
 import { SidebarDraw } from "./draw/SidebarDraw";
 
-import "./SidebarRight.less";
+import "./SidebarRight.css";
 
 export const enum Tools {
 	BRUSH = "Brush",
