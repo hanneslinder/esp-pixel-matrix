@@ -14,23 +14,15 @@ export const Header: React.FC<Props> = view(() => {
     : "No connection";
 
   return (
-    <div className="flex-grow-0 basis-10 flex bg-[--color-dark-2] items-center justify-center">
-      <div className="flex text-[--color-text-2] text-sm">
-        <div className="flex mr-5">
-          {isConnected ? (
-            <Wifi className="h-3 translate-y-[3px]" />
-          ) : (
-            <WifiOff className="h-3 translate-y-[3px]" />
-          )}
-          <span>{text}</span>
+    <div className="flex-grow-0 basis-10 flex bg-gray-800 items-center justify-center">
+      <div className="flex text-xs">
+        <div className="flex items-center mr-5">
+          {isConnected ? <Wifi size={12} /> : <WifiOff size={12} />}
+          <span className="ml-2">{text}</span>
         </div>
         <div className="ml-5">
-          {appState.connection.isSending && (
-            <CloudUpload className="h-3 translate-y-[3px]" />
-          )}
-          {appState.connection.isReceiving && (
-            <CloudDownload className="h-3 translate-y-[3px]" />
-          )}
+          {appState.connection.isSending && <CloudUpload size={12} />}
+          {appState.connection.isReceiving && <CloudDownload size={12} />}
         </div>
       </div>
       <VersionChecker />

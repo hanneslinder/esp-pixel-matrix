@@ -47,15 +47,15 @@ export const FilePicker: React.FC<Props> = view(
 
     const renderInputHint = () => (
       <>
-        <div className="p-5 [&>svg]:w-10 [&>svg]:h-10 [&>svg]:fill-[--color-text-2]">
+        <div className="p-5">
           <ImagePlus title="Select image" />
         </div>
-        <div className="text-xs text-[--color-text-2]">{label}</div>
-        <div className="text-xs text-[--color-text-2]">or</div>
+        <div className="text-xs">{label}</div>
+        <div className="text-xs">or</div>
         <div>
           <label
             htmlFor="upload-input"
-            className="cursor-pointer bg-[--color-dark-1] text-[--color-text] px-2.5 py-2.5 mt-2.5 block"
+            className="cursor-pointer p-2 mt-2 block"
           >
             <span>Choose a file</span>
           </label>
@@ -89,7 +89,7 @@ export const FilePicker: React.FC<Props> = view(
 
     return (
       <div
-        className={`text-xs text-[--color-text-2] flex-grow-0 flex justify-center items-center flex-col h-[200px] border-2 border-dashed border-[--color-dark-3] rounded-md ${
+        className={`text-xs flex-grow-0 flex justify-center items-center flex-col h-[200px] border-2 border-dashed rounded-md ${
           progress ? "pointer-events-none" : ""
         }`}
         onDrop={(e) => handleDrop(e)}

@@ -52,13 +52,13 @@ export const SaveLoad: React.FC<SavedItemProps> = view(({ getCanvas }) => {
 
   return (
     <div>
-      <div className="border-b border-[--color-dark-3] mb-5">
+      <div className="border-b border-[--color-dark-1] mb-5">
         <div className="flex my-5 items-center justify-between">
           <div className="flex-grow mr-5">
             <input
               placeholder="View Name"
               type="text"
-              className="bg-[--color-dark-1] text-[--color-text] px-2.5 py-1.5 border-none h-10 rounded-md w-full"
+              className="bg-[--color-dark-1] text-[--color-gray-0] px-2.5 py-1.5 border-none h-10 rounded-md w-full"
               value={saveName}
               onChange={(e) =>
                 setSaveName((e.target as HTMLInputElement).value)
@@ -66,7 +66,7 @@ export const SaveLoad: React.FC<SavedItemProps> = view(({ getCanvas }) => {
             />
           </div>
           <button
-            className="mt-0 flex items-center cursor-pointer bg-[--color-dark-1] text-[--color-text] px-2.5 py-2.5 border-none rounded-md"
+            className="mt-0 flex items-center cursor-pointer bg-[--color-dark-1] text-[--color-gray-0] px-2.5 py-2.5 border-none rounded-md"
             onClick={() => save()}
           >
             <span className="mr-1.5">Save</span>
@@ -76,7 +76,7 @@ export const SaveLoad: React.FC<SavedItemProps> = view(({ getCanvas }) => {
           {savedItems.map((item) => (
             <div
               key={getItemKey(item)}
-              className="flex items-center py-2.5 border-t border-[--color-dark-3]"
+              className="flex items-center py-2.5 border-t border-[--color-dark-1]"
             >
               <div
                 className="w-[100px] whitespace-nowrap w-full overflow-hidden text-ellipsis cursor-pointer"
@@ -135,7 +135,7 @@ class PreviewCanvas extends React.Component<PreviewCanvasProps, {}> {
           this.canvasRef = r;
         }}
         onClick={this.props.onClick}
-        className="border border-[--color-dark-3] mr-5 ml-5 cursor-pointer transition-[border-color] duration-300 hover:border-[--color-text]"
+        className="border border-[--color-dark-1] mr-5 ml-5 cursor-pointer transition-[border-color] duration-300 hover:border-[--color-gray-0]"
       />
     );
   }

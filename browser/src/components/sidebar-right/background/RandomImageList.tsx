@@ -122,18 +122,18 @@ export const RandomImageList: React.FC<Props> = ({ imageSelected }) => {
           <a
             href="https://unsplash.com/developers"
             target="_blank"
-            className="text-[--color-highlight-2]"
+            className="text-[--color-blue-1]"
           >
             unsplash API key
           </a>
         </div>
         <input
           type="text"
-          className="mt-2.5 w-full bg-[--color-dark-1] text-[--color-text] px-2.5 py-1.5 border-none h-[30px] rounded-md"
+          className="mt-2.5 w-full bg-[--color-dark-1] text-[--color-gray-0] px-2.5 py-1.5 border-none h-[30px] rounded-md"
           onChange={(e) => setNewApiKey((e.target as HTMLInputElement).value)}
         />
         <button
-          className="cursor-pointer bg-[--color-dark-1] text-[--color-text] px-2.5 py-2.5 mt-2.5 block border-none rounded-md"
+          className="cursor-pointer bg-[--color-dark-1] text-[--color-gray-0] px-2.5 py-2.5 mt-2.5 block border-none rounded-md"
           onClick={onApiKeySave}
         >
           Set api key
@@ -156,7 +156,7 @@ export const RandomImageList: React.FC<Props> = ({ imageSelected }) => {
       )}
       {apiKey && !apiError ? renderImageList() : renderApiInput()}
       {selectedImage && (
-        <div className="hidden text-[--color-text-2] text-xs mb-2.5 [&>a]:text-[--color-text-2] [&>a]:px-1.5">
+        <div className="hidden text-[--color-gray-1] text-xs mb-2.5 [&>a]:text-[--color-gray-1] [&>a]:px-1.5">
           <span>Photo by</span>
           <a
             href={`${selectedImage.userUrl}?utm_source=Led_Clock&utm_medium=referral`}

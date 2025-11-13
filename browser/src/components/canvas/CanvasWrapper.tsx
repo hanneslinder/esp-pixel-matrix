@@ -65,7 +65,7 @@ export class CanvasWrapperElement extends React.Component<
     return (
       <div
         id="canvas-wrapper"
-        className="relative border-[10px] border-[--color-dark-2] rounded-[10px]"
+        className="relative border-[10px] border-[--color-dark-1] rounded-[10px]"
         ref={this.canvasWrapperRef}
       />
     );

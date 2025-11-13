@@ -105,8 +105,8 @@ export const TextOptionsControl: React.FC<Props> = view(
     console.log(settings);
 
     return (
-      <div className="border-b border-[--color-dark-3] mb-5">
-        <div className="flex my-5 items-center border-b border-[--color-dark-3] pb-5">
+      <div className="border-b border-[--color-dark-1] mb-5">
+        <div className="flex my-5 items-center border-b border-[--color-dark-1] pb-5">
           <div className="flex-grow items-center flex">
             <span>Text</span>
             <MessageCircleQuestionMark
@@ -124,7 +124,7 @@ export const TextOptionsControl: React.FC<Props> = view(
           <div className="flex-grow-0 flex items-center">
             <input
               type="text"
-              className="bg-[--color-dark-1] text-[--color-text] px-2.5 py-1.5 border-none h-[30px] rounded-md"
+              className="bg-[--color-dark-1] text-[--color-gray-0] px-2.5 py-1.5 border-none h-[30px] rounded-md"
               value={settings.text}
               onChange={(e) =>
                 onTextChange((e.target as HTMLInputElement).value)
@@ -148,7 +148,7 @@ export const TextOptionsControl: React.FC<Props> = view(
             <div>{settings.size}</div>
             <div className="flex-grow-0 basis-10 flex ml-5">
               <div
-                className={`flex-grow-0 w-[30px] h-[30px] select-none flex justify-center content-center bg-[--color-dark-1] cursor-pointer items-center rounded-tl-sm rounded-bl-sm border-r border-[--color-text-2] hover:bg-[--color-highlight-1] ${
+                className={`flex-grow-0 w-[30px] h-[30px] select-none flex justify-center content-center bg-[--color-dark-1] cursor-pointer items-center rounded-tl-sm rounded-bl-sm border-r border-[--color-gray-1] hover:bg-[--color-blue-0] ${
                   settings.size === 1 ? "opacity-50 pointer-events-none" : ""
                 }`}
                 onClick={() => changeSize(settings.size - 1)}
@@ -156,7 +156,7 @@ export const TextOptionsControl: React.FC<Props> = view(
                 -
               </div>
               <div
-                className={`flex-grow-0 w-[30px] h-[30px] select-none flex justify-center content-center bg-[--color-dark-1] cursor-pointer items-center rounded-tr-sm rounded-br-sm hover:bg-[--color-highlight-1] ${
+                className={`flex-grow-0 w-[30px] h-[30px] select-none flex justify-center content-center bg-[--color-dark-1] cursor-pointer items-center rounded-tr-sm rounded-br-sm hover:bg-[--color-blue-0] ${
                   settings.size > 4 ? "opacity-50 pointer-events-none" : ""
                 }`}
                 onClick={() => changeSize(settings.size + 1)}
@@ -182,7 +182,7 @@ export const TextOptionsControl: React.FC<Props> = view(
             <div>{settings.offsetX}</div>
             <div className="flex-grow-0 basis-10 flex ml-5">
               <div
-                className={`flex-grow-0 w-[30px] h-[30px] select-none flex justify-center content-center bg-[--color-dark-1] cursor-pointer items-center rounded-tl-sm rounded-bl-sm border-r border-[--color-text-2] hover:bg-[--color-highlight-1] ${
+                className={`flex-grow-0 w-[30px] h-[30px] select-none flex justify-center content-center bg-[--color-dark-1] cursor-pointer items-center rounded-tl-sm rounded-bl-sm border-r border-[--color-gray-1] hover:bg-[--color-blue-0] ${
                   settings.offsetX < -19 ? "opacity-50 pointer-events-none" : ""
                 }`}
                 onClick={() => onXOffsetChange(settings.offsetX - 1)}
@@ -190,7 +190,7 @@ export const TextOptionsControl: React.FC<Props> = view(
                 -
               </div>
               <div
-                className={`flex-grow-0 w-[30px] h-[30px] select-none flex justify-center content-center bg-[--color-dark-1] cursor-pointer items-center rounded-tr-sm rounded-br-sm hover:bg-[--color-highlight-1] ${
+                className={`flex-grow-0 w-[30px] h-[30px] select-none flex justify-center content-center bg-[--color-dark-1] cursor-pointer items-center rounded-tr-sm rounded-br-sm hover:bg-[--color-blue-0] ${
                   settings.offsetX > 19 ? "opacity-50 pointer-events-none" : ""
                 }`}
                 onClick={() => onXOffsetChange(settings.offsetX + 1)}
@@ -206,7 +206,7 @@ export const TextOptionsControl: React.FC<Props> = view(
             <div>{settings.offsetY}</div>
             <div className="flex-grow-0 basis-10 flex ml-5">
               <div
-                className={`flex-grow-0 w-[30px] h-[30px] select-none flex justify-center content-center bg-[--color-dark-1] cursor-pointer items-center rounded-tl-sm rounded-bl-sm border-r border-[--color-text-2] hover:bg-[--color-highlight-1] ${
+                className={`flex-grow-0 w-[30px] h-[30px] select-none flex justify-center content-center bg-[--color-dark-1] cursor-pointer items-center rounded-tl-sm rounded-bl-sm border-r border-[--color-gray-1] hover:bg-[--color-blue-0] ${
                   settings.offsetY < -19 ? "opacity-50 pointer-events-none" : ""
                 }`}
                 onClick={() => onYOffsetChange(settings.offsetY - 1)}
@@ -214,7 +214,7 @@ export const TextOptionsControl: React.FC<Props> = view(
                 -
               </div>
               <div
-                className={`flex-grow-0 w-[30px] h-[30px] select-none flex justify-center content-center bg-[--color-dark-1] cursor-pointer items-center rounded-tr-sm rounded-br-sm hover:bg-[--color-highlight-1] ${
+                className={`flex-grow-0 w-[30px] h-[30px] select-none flex justify-center content-center bg-[--color-dark-1] cursor-pointer items-center rounded-tr-sm rounded-br-sm hover:bg-[--color-blue-0] ${
                   settings.offsetY > 19 ? "opacity-50 pointer-events-none" : ""
                 }`}
                 onClick={() => onYOffsetChange(settings.offsetY + 1)}
@@ -224,7 +224,7 @@ export const TextOptionsControl: React.FC<Props> = view(
             </div>
           </div>
         </div>
-        <div className="flex my-5 items-center border-b border-[--color-dark-3] pb-5">
+        <div className="flex my-5 items-center border-b border-[--color-dark-1] pb-5">
           <Expandable
             title="Color"
             initialOpen={false}
@@ -242,7 +242,7 @@ export const TextOptionsControl: React.FC<Props> = view(
         </div>
         <div className="flex justify-end mb-5 -mt-[30px]">
           <button
-            className="cursor-pointer bg-[--color-dark-1] text-[--color-text] px-2.5 py-2.5 mt-2.5 block border-none rounded-md"
+            className="cursor-pointer bg-[--color-dark-1] text-[--color-gray-0] px-2.5 py-2.5 mt-2.5 block border-none rounded-md"
             onClick={() => removeTextItem(settings.line)}
           >
             delete

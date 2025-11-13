@@ -32,7 +32,7 @@ export const Dropdown: React.FC<Props> = ({ items, selected, onSelect }) => {
   return (
     <div className="relative w-[100px]" ref={ref}>
       <div
-        className="bg-[--color-dark-1] px-2.5 py-1.5 w-[100px] box-border cursor-pointer flex justify-between rounded-md hover:bg-[--color-highlight-1] [&>svg]:w-3"
+        className="bg-[--color-dark-1] px-2.5 py-1.5 w-[100px] box-border cursor-pointer flex justify-between rounded-md hover:bg-[--color-blue-0] [&>svg]:w-3"
         onClick={() => setOpen(!open)}
       >
         <span>{selectedItem.label}</span>
@@ -46,7 +46,7 @@ export const Dropdown: React.FC<Props> = ({ items, selected, onSelect }) => {
           {items.map((item) => (
             <div
               key={item.label}
-              className="px-2.5 py-1.5 cursor-pointer hover:bg-[--color-highlight-1]"
+              className="px-2.5 py-1.5 cursor-pointer hover:bg-[--color-blue-0]"
               onClick={() => handleItemSelected(item)}
             >
               {item.label}

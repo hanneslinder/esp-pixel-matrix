@@ -69,7 +69,7 @@ export const SidebarText: React.FC<Props> = view(() => {
 
   return (
     <div className="mx-5">
-      <div className="border-b border-[--color-dark-3] mb-5">
+      <div className="border-b border-[--color-dark-1] mb-5">
         <div className="flex my-5 items-center">
           <div className="flex-grow items-center flex">Blend Mode</div>
           <div className="flex-grow-0 flex items-center">

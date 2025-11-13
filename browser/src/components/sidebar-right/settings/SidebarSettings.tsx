@@ -50,20 +50,20 @@ export const SidebarSettings: React.FC<Props> = view(({ getCanvas }) => {
       <BrightnessSlider />
       <Expandable
         title="Firmware update"
-        className="border-b border-[--color-dark-3]"
+        className="border-b border-[--color-dark-1]"
         initialOpen={false}
       >
         <FirmwareUpdateForm />
       </Expandable>
       <SaveLoad getCanvas={getCanvas} />
       <button
-        className="cursor-pointer bg-[--color-dark-1] text-[--color-text] px-2.5 py-2.5 mt-2.5 block border-none rounded-md w-full"
+        className="cursor-pointer bg-[--color-dark-1] text-[--color-gray-0] px-2.5 py-2.5 mt-2.5 block border-none rounded-md w-full"
         onClick={() => getRemoteState()}
       >
         Sync
       </button>
       <button
-        className="cursor-pointer bg-[--color-dark-1] text-[--color-text] px-2.5 py-2.5 mt-2.5 block border-none rounded-md w-full"
+        className="cursor-pointer bg-[--color-dark-1] text-[--color-gray-0] px-2.5 py-2.5 mt-2.5 block border-none rounded-md w-full"
         onClick={() => reset()}
       >
         Reset WIFI

@@ -1,14 +1,16 @@
 @import "tailwindcss";
 
 @theme {
-	--color-text: #f1fcff;
-	--color-text-2: #818aa5;
-	--color-highlight-1: #3c4a73;
-	--color-highlight-2: #5d8dff;
-	--color-dark-1: #1d1d28;
-	--color-dark-2: #262837;
-	--color-dark-3: #313345;
+	/* Color palette */
+	--color-gray-0: #f1fcff;
+	--color-gray-1: #818aa5;
+	--color-blue-0: #3c4a73;
+	--color-blue-1: #5d8dff;
+	--color-dark-0: #1d1d28;
+	--color-dark-1: #262837;
+	--color-dark-2: #313345;
 	
+	/* Font family */
 	--font-sans: "Work Sans", ui-sans-serif, system-ui, sans-serif;
 }
 
@@ -27,6 +29,10 @@
 	background: #000000;
 }
 
+.lucide {
+	stroke-width: 1px;
+}
+
 /* Custom form elements styling */
 input[type="range"] {
 	background-color: transparent;
@@ -39,8 +45,8 @@ input[type="text"]:focus {
 }
 
 input[type="range"]::-webkit-slider-runnable-track {
-	background: var(--color-highlight-1);
-	border: 1px solid var(--color-dark-3);
+	background: var(--color-blue-0);
+	border: 1px solid var(--color-dark-2);
 	border-radius: 5px;
 	width: 100%;
 	height: 12px;
@@ -51,14 +57,14 @@ input[type="range"]::-webkit-slider-thumb {
 	margin-top: -3px;
 	width: 16px;
 	height: 16px;
-	background: var(--color-dark-1);
+	background: var(--color-dark-0);
 	border-radius: 12px;
 	cursor: pointer;
 	-webkit-appearance: none;
 }
 
 input[type="range"]:focus::-webkit-slider-runnable-track {
-	background: var(--color-highlight-1);
+	background: var(--color-blue-0);
 }
 
 input[type="number"]::-webkit-inner-spin-button {
@@ -66,11 +72,11 @@ input[type="number"]::-webkit-inner-spin-button {
 }
 
 progress::-webkit-progress-bar {
-	background: var(--color-dark-1);
+	background: var(--color-dark-0);
 }
 
 progress::-webkit-progress-value {
-	background: var(--color-highlight-2);
+	background: var(--color-blue-1);
 }
 
 /* Custom scrollbar styling */

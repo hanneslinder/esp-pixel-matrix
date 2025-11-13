@@ -54,10 +54,10 @@ export const VersionChecker: React.FC<Props> = () => {
   }, []);
 
   return (
-    <div className="flex items-center text-[--color-text-2] text-sm">
+    <div className="flex items-center text-xs">
       {newVersionAvailable && (
         <a
-          className="font-normal text-[--color-text] cursor-pointer"
+          className="font-normal cursor-pointer"
           href={getDownloadUrl()}
           target="_blank"
         >{`New Version ${versionNumber} available!`}</a>

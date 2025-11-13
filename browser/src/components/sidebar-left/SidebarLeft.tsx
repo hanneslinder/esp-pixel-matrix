@@ -30,15 +30,13 @@ export const SidebarLeft = view((props: Props) => {
         return (
           <div
             key={item.label}
-            className={`cursor-pointer flex flex-col items-center justify-center h-20 w-10 px-5 text-xs border-t border-[--color-dark-3] last:border-b ${
-              isActive
-                ? "bg-[--color-highlight-1]"
-                : "hover:bg-[--color-dark-3]"
+            className={`cursor-pointer flex flex-col items-center justify-center h-20 px-2 text-xs border-t border-gray-600 last:border-b ${
+              isActive ? "bg-gray-900" : "hover:bg-gray-700"
             }`}
             onClick={() => setItemActive(item.label)}
           >
-            <div className="mb-1.5 [&>svg]:stroke-[1px]">{item.icon}</div>
-            <div>{item.label}</div>
+            <div className="mb-1 mb-2">{item.icon}</div>
+            <div className="text-xs">{item.label}</div>
           </div>
         );
       })}
