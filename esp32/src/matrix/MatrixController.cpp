@@ -39,8 +39,6 @@ void MatrixController::begin()
   bgLayer.clear();
   textLayer.clear();
 
-  MatrixController::drawText("Starting up...", MIDDLE, &Picopixel, 0xFFFF, 1, 0, 0, 1);
-
   gfx_compositor.Stack(bgLayer, textLayer);
 }
 

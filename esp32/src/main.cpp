@@ -414,6 +414,9 @@ void loop()
     const String ip = WiFi.localIP().toString();
 
     matrix.drawText(ip.c_str(), MIDDLE, &Picopixel, 0xFFFF, 1, 0, 0, 1);
+    matrix.render(compositionMode);
+
+    Serial.println("Startup finished, showing IP address for 6 seconds...");
 
     delay(6000);
 
@@ -436,13 +439,11 @@ void loop()
 
   matrix.render(compositionMode);
 
-  // Periodic heap and system status monitoring (every 5 minutes)
   if (millis() - lastHeapCheck > 300000) {
     lastHeapCheck = millis();
     checkHeapAndLog();
   }
 
-  // Check if WiFi is connected with robust reconnection logic
   if (millis() - lastWiFiCheck > 30000) {
     lastWiFiCheck = millis();
 
