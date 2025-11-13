@@ -28,5 +28,6 @@ void onError(AsyncWebSocketClient* client);
 // Utility functions
 void sendPixels();
 void sendState();
+void broadcastConfigUpdate(); // Notify all clients of config changes
 
 } // namespace WebSocketHandler

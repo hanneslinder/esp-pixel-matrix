@@ -161,6 +161,7 @@ void handleCompositionMode(JsonDocument& doc)
   int mode = doc["mode"];
   config.setCompositionMode(mode);
   config.save();
+  broadcastConfigUpdate();
 }
 
 void handleSetBrightness(JsonDocument& doc)
@@ -179,22 +180,30 @@ void handleSetBrightness(JsonDocument& doc)
   config.setBrightness(clampedBrightness);
   matrix->setBrightness(clampedBrightness);
   config.save();
+  broadcastConfigUpdate();
 }
 
 void handleSetTimeZone(JsonDocument& doc)
 {
   const char* tz = doc["timezone"];
-  strlcpy(currentTimezone, tz, sizeof(currentTimezone));
+  config.setTimezone(tz);
+  strlcpy(currentTimezone, tz, sizeof(currentTimezone)); // Keep for backward compatibility
   configTzTime(currentTimezone, config.getNtpServer());
+  config.save();
+  broadcastConfigUpdate();
   Serial.printf("Timezone updated to: %s\n", currentTimezone);
 }
 
 void handleSetLocale(JsonDocument& doc)
 {
   const char* loc = doc["locale"];
+  config.setLocale(loc);
   if (textDisplay != nullptr) {
     textDisplay->setLocale(loc);
   }
+  config.save();
+  broadcastConfigUpdate();
+  Serial.printf("Locale updated to: %s\n", loc);
 }
 
 void handleCustomData(JsonDocument& doc)
@@ -207,24 +216,38 @@ void handleCustomData(JsonDocument& doc)
     if (customDataObj["server"] != 0) {
       String serverUrl = customDataObj["server"];
 
+      // Update ConfigManager
+      config.setCustomDataEnabled(true);
+      config.setCustomDataInterval(interval);
+      config.setCustomDataServer(serverUrl.c_str());
+
+      // Update CustomDataHandler
       if (customData != nullptr) {
         customData->setEnabled(true);
         customData->setUpdateInterval(interval);
         customData->setServerUrl(serverUrl.c_str());
       }
 
+      // Keep extern variables for backward compatibility
       customDataEnabled = true;
       customDataUpdateInterval = interval;
       strlcpy(customDataServer, serverUrl.c_str(), sizeof(customDataServer));
 
+      config.save();
+      broadcastConfigUpdate();
       Serial.println("Enabled custom data");
       Serial.println(serverUrl);
     }
   } else {
+    // Disable custom data
+    config.setCustomDataEnabled(false);
     if (customData != nullptr) {
       customData->setEnabled(false);
     }
     customDataEnabled = false;
+    config.save();
+    broadcastConfigUpdate();
+    Serial.println("Disabled custom data");
   }
 }
 
@@ -282,13 +305,15 @@ void sendState()
   JsonArray textArray = doc["text"].to<JsonArray>();
 
   doc["action"] = "matrixSettings";
-  doc["customData"] = customDataEnabled;
-  doc["customDataServer"] = customDataServer;
-  doc["customDataInterval"] = customDataUpdateInterval;
+  
+  // Use ConfigManager for all configuration values
+  doc["customData"] = config.isCustomDataEnabled();
+  doc["customDataServer"] = config.getCustomDataServer();
+  doc["customDataInterval"] = config.getCustomDataInterval();
   doc["compositionMode"] = config.getCompositionMode();
   doc["brightness"] = config.getBrightness();
-  doc["timezone"] = currentTimezone;
-  doc["locale"] = (textDisplay != nullptr) ? textDisplay->getCurrentLocale() : "en_US.UTF-8";
+  doc["timezone"] = config.getTimezone();
+  doc["locale"] = config.getLocale();
 
   for (int i = 0; i < 5; i++) {
     if (strcmp(textContent[i].text, "") != 0) {
@@ -307,6 +332,14 @@ void sendState()
   String json;
   serializeJson(doc, json);
   ws->textAll(json);
+}
+
+void broadcastConfigUpdate()
+{
+  if (ws != nullptr) {
+    sendState();
+    Serial.println("Config update broadcasted to all WebSocket clients");
+  }
 }
 
 // ============================================================================
