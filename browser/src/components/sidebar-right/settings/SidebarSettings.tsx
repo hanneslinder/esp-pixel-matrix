@@ -10,49 +10,64 @@ import { getSocket, IncommingMessageType } from "../../../Websocket";
 import { StateFromRemote } from "../../../utils/storage";
 import { appState } from "../../../state/appState";
 
-import "./SidebarSettings.css";
-
 interface Props {
-	getCanvas: () => Canvas;
+  getCanvas: () => Canvas;
 }
 
 // Sync settings from esp32 back to app
 const onRemoteStateReceived = (state: StateFromRemote) => {
-	Object.keys(state).forEach((key: keyof StateFromRemote) => {
-		(appState[key] as any) = state[key];
-		console.log("Updated appState from remote:", key, state[key]);
-	});
+  Object.keys(state).forEach((key: keyof StateFromRemote) => {
+    (appState[key] as any) = state[key];
+    console.log("Updated appState from remote:", key, state[key]);
+  });
 };
 
 export const SidebarSettings: React.FC<Props> = view(({ getCanvas }) => {
-	let unsubscribeFromStateMessage: () => void;
+  let unsubscribeFromStateMessage: () => void;
 
-	const getRemoteState = () => {
-		getPixelsAction();
-		getStateAction();
-	};
+  const getRemoteState = () => {
+    getPixelsAction();
+    getStateAction();
+  };
 
-	const reset = () => {
-		resetAction();
-	};
+  const reset = () => {
+    resetAction();
+  };
 
-	useEffect(() => {
-		unsubscribeFromStateMessage = getSocket().subscribe(IncommingMessageType.MatrixSettingsResponse, onRemoteStateReceived);
+  useEffect(() => {
+    unsubscribeFromStateMessage = getSocket().subscribe(
+      IncommingMessageType.MatrixSettingsResponse,
+      onRemoteStateReceived
+    );
 
-		return function cleanup() {
-			unsubscribeFromStateMessage();
-		};
-	}, [unsubscribeFromStateMessage]);
+    return function cleanup() {
+      unsubscribeFromStateMessage();
+    };
+  }, [unsubscribeFromStateMessage]);
 
-	return (
-		<div className="sidebar-settings">
-			<BrightnessSlider />
-			<Expandable title="Firmware update" className="expandable-firmware" initialOpen={false}>
-				<FirmwareUpdateForm />
-			</Expandable>
-			<SaveLoad getCanvas={getCanvas} />
-			<button onClick={() => getRemoteState()}>Sync</button>
-			<button onClick={() => reset()}>Reset WIFI</button>
-		</div>
-	);
+  return (
+    <div className="mx-5">
+      <BrightnessSlider />
+      <Expandable
+        title="Firmware update"
+        className="border-b border-[--color-dark-3]"
+        initialOpen={false}
+      >
+        <FirmwareUpdateForm />
+      </Expandable>
+      <SaveLoad getCanvas={getCanvas} />
+      <button
+        className="cursor-pointer bg-[--color-dark-1] text-[--color-text] px-2.5 py-2.5 mt-2.5 block border-none rounded-md w-full"
+        onClick={() => getRemoteState()}
+      >
+        Sync
+      </button>
+      <button
+        className="cursor-pointer bg-[--color-dark-1] text-[--color-text] px-2.5 py-2.5 mt-2.5 block border-none rounded-md w-full"
+        onClick={() => reset()}
+      >
+        Reset WIFI
+      </button>
+    </div>
+  );
 });

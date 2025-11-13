@@ -16,19 +16,18 @@ const App = view(() => {
   const canvasWrapperRef = useRef<CanvasWrapperElement>(null);
 
   return (
-    <div className="layout">
+    <div className="flex flex-col flex-grow w-screen bg-[--color-dark-1] text-[--color-text] font-sans text-sm">
       <Header />
-      <div className="content">
-        <div className="sidebar-left">
+      <div className="flex justify-between h-[calc(100vh-40px)]">
+        <div className="bg-[--color-dark-2] max-h-[calc(100vh-40px)] overflow-visible">
           <SidebarLeft />
         </div>
-        <div className="main-content">
+        <div className="flex-grow flex-shrink overflow-auto flex items-center flex-col justify-center">
           <CanvasWrapper ref={canvasWrapperRef} />
         </div>
-        <div className="sidebar-right">
+        <div className="bg-[--color-dark-2] flex-grow-0 basis-[350px] min-w-[280px] max-h-[calc(100vh-40px)] overflow-auto">
           <SidebarRight getCanvas={() => canvasWrapperRef.current.canvas} />
         </div>
-        <div className="toolbar-top"></div>
       </div>
     </div>
   );

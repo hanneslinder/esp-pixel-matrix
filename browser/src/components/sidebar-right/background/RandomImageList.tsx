@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { Loader } from "../../utils/Loader";
-
-import "./RandomImageList.css";
 import {
   getApiKeyFromLocalStorage,
   saveApiKeyToLocalStorage,
@@ -90,61 +88,75 @@ export const RandomImageList: React.FC<Props> = ({ imageSelected }) => {
 
   const renderImageList = () => {
     return (
-      <>
-        {isLoading && <Loader />}
-        <div className="random-image-list">
+      <div className="overflow-scroll flex-shrink flex-grow basis-[200px]">
+        {isLoading && (
+          <div className="w-10 h-10 border-2">
+            <Loader />
+          </div>
+        )}
+        <div className="max-h-[550px] grid grid-cols-2 gap-2.5">
           {!isLoading &&
             images.map((i: UnsplashImage) => (
               <div
                 key={i.downloadUrl}
-                className="random-image"
+                className="w-full h-[100px] bg-cover cursor-pointer"
                 style={{ backgroundImage: `url(${i.thumbUrl})` }}
                 onClick={() => onImageSelected(i)}
               />
             ))}
         </div>
-      </>
+      </div>
     );
   };
 
   const renderApiInput = () => {
     return (
-      <div className="api-key-input">
+      <div>
         {apiError && (
-          <div className="api-error-msg">
+          <div className="text-xs text-[#e06262] mb-2.5">
             The unsplash API returned an error.
           </div>
         )}
         <div>
           Please enter your{" "}
-          <a href="https://unsplash.com/developers" target="_blank">
+          <a
+            href="https://unsplash.com/developers"
+            target="_blank"
+            className="text-[--color-highlight-2]"
+          >
             unsplash API key
           </a>
         </div>
         <input
           type="text"
+          className="mt-2.5 w-full bg-[--color-dark-1] text-[--color-text] px-2.5 py-1.5 border-none h-[30px] rounded-md"
           onChange={(e) => setNewApiKey((e.target as HTMLInputElement).value)}
         />
-        <button onClick={onApiKeySave}>Set api key</button>
+        <button
+          className="cursor-pointer bg-[--color-dark-1] text-[--color-text] px-2.5 py-2.5 mt-2.5 block border-none rounded-md"
+          onClick={onApiKeySave}
+        >
+          Set api key
+        </button>
       </div>
     );
   };
 
   return (
-    <div className="random-images">
+    <div>
       {apiKey && !apiError && (
-        <div className="title">
+        <div className="flex justify-center items-center mb-2.5 text-center text-xs [&>span]:p-2.5 [&>svg]:w-5 [&>svg]:p-2.5 [&>svg]:inline-block [&>svg]:translate-y-[-2px]">
           <span>Random Images</span>
           <RefreshCw
             size={16}
             onClick={getNewImages}
-            className="icon-clickable"
+            className="cursor-pointer [&>svg]:stroke-[1px]"
           />
         </div>
       )}
       {apiKey && !apiError ? renderImageList() : renderApiInput()}
       {selectedImage && (
-        <div className="selected-image-credits">
+        <div className="hidden text-[--color-text-2] text-xs mb-2.5 [&>a]:text-[--color-text-2] [&>a]:px-1.5">
           <span>Photo by</span>
           <a
             href={`${selectedImage.userUrl}?utm_source=Led_Clock&utm_medium=referral`}

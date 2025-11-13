@@ -11,8 +11,6 @@ import { TextOptionsControl } from "./TextOptionsControl";
 import { Expandable } from "../../utils/Expandable";
 import { Blend, CirclePlus } from "lucide-react";
 
-import "./SidebarText.css";
-
 interface Props {}
 
 export const SidebarText: React.FC<Props> = view(() => {
@@ -59,20 +57,26 @@ export const SidebarText: React.FC<Props> = view(() => {
   const renderAddTextButton = () => {
     if (appState.text.length < 5) {
       return (
-        <div className="btn-add-text">
-          <CirclePlus onClick={addTextItem} />
+        <div className="flex justify-center my-5 mb-12">
+          <CirclePlus
+            onClick={addTextItem}
+            className="cursor-pointer [&>svg]:stroke-[1px]"
+          />
         </div>
       );
     }
   };
 
   return (
-    <div className="sidebar-text">
-      <div className="sidebar-settings-section">
-        <div className="sidebar-settings-item">
-          <div className="sidebar-settings-label">Blend Mode</div>
-          <div className="sidebar-settings-input">
-            <Blend className="icon-clickable" onClick={setCompositionMode} />
+    <div className="mx-5">
+      <div className="border-b border-[--color-dark-3] mb-5">
+        <div className="flex my-5 items-center">
+          <div className="flex-grow items-center flex">Blend Mode</div>
+          <div className="flex-grow-0 flex items-center">
+            <Blend
+              className="cursor-pointer [&>svg]:stroke-[1px]"
+              onClick={setCompositionMode}
+            />
           </div>
         </div>
       </div>

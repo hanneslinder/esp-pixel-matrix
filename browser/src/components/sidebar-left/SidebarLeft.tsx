@@ -2,8 +2,6 @@ import { view } from "@risingstack/react-easy-state";
 import { appState } from "../../state/appState";
 import { Brush, Type, Image, Settings } from "lucide-react";
 
-import "./SidebarLeft.css";
-
 export const enum SidebarLeftItem {
   Draw = "Draw",
   Text = "Text",
@@ -25,19 +23,21 @@ export const SidebarLeft = view((props: Props) => {
     (appState.sidebarLeft.selected = item);
 
   return (
-    <div className="sidebar-left-content">
+    <div className="flex flex-col select-none">
       {items.map((item) => {
-        const className = `sidebar-icon ${
-          appState.sidebarLeft.selected === item.label ? "is-active" : ""
-        }`;
+        const isActive = appState.sidebarLeft.selected === item.label;
 
         return (
           <div
             key={item.label}
-            className={className}
+            className={`cursor-pointer flex flex-col items-center justify-center h-20 w-10 px-5 text-xs border-t border-[--color-dark-3] last:border-b ${
+              isActive
+                ? "bg-[--color-highlight-1]"
+                : "hover:bg-[--color-dark-3]"
+            }`}
             onClick={() => setItemActive(item.label)}
           >
-            <div>{item.icon}</div>
+            <div className="mb-1.5 [&>svg]:stroke-[1px]">{item.icon}</div>
             <div>{item.label}</div>
           </div>
         );

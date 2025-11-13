@@ -97,7 +97,7 @@ export const TextOptionsControl: React.FC<Props> = view(
 
     const clorpickerPreview = (
       <div
-        className="color-picker-preview"
+        className="w-10 h-5 mr-0 rounded-md transition-[margin] duration-[600ms] color-picker-preview"
         style={{ background: settings.color }}
       />
     );
@@ -105,12 +105,12 @@ export const TextOptionsControl: React.FC<Props> = view(
     console.log(settings);
 
     return (
-      <div className="sidebar-settings-section">
-        <div className="sidebar-settings-item">
-          <div className="sidebar-settings-label">
+      <div className="border-b border-[--color-dark-3] mb-5">
+        <div className="flex my-5 items-center border-b border-[--color-dark-3] pb-5">
+          <div className="flex-grow items-center flex">
             <span>Text</span>
             <MessageCircleQuestionMark
-              className="icon-text-help"
+              className="ml-2.5 cursor-pointer transition-opacity duration-300 hover:opacity-100"
               title="help"
               size={16}
               onClick={() =>
@@ -121,9 +121,10 @@ export const TextOptionsControl: React.FC<Props> = view(
               }
             />
           </div>
-          <div className="sidebar-settings-input">
+          <div className="flex-grow-0 flex items-center">
             <input
               type="text"
+              className="bg-[--color-dark-1] text-[--color-text] px-2.5 py-1.5 border-none h-[30px] rounded-md"
               value={settings.text}
               onChange={(e) =>
                 onTextChange((e.target as HTMLInputElement).value)
@@ -131,9 +132,9 @@ export const TextOptionsControl: React.FC<Props> = view(
             />
           </div>
         </div>
-        <div className="sidebar-settings-item">
-          <div className="sidebar-settings-label">Font</div>
-          <div className="sidebar-settings-input">
+        <div className="flex my-5 items-center">
+          <div className="flex-grow items-center flex">Font</div>
+          <div className="flex-grow-0 flex items-center">
             <Dropdown
               selected={settings.font}
               items={getFontItems()}
@@ -141,22 +142,22 @@ export const TextOptionsControl: React.FC<Props> = view(
             />
           </div>
         </div>
-        <div className="sidebar-settings-item">
-          <div className="sidebar-settings-label">Size</div>
-          <div className="sidebar-settings-input">
-            <div className="offset-input">{settings.size}</div>
-            <div className="offset-buttons">
+        <div className="flex my-5 items-center">
+          <div className="flex-grow items-center flex">Size</div>
+          <div className="flex-grow-0 flex items-center">
+            <div>{settings.size}</div>
+            <div className="flex-grow-0 basis-10 flex ml-5">
               <div
-                className={`offset-icon decrement ${
-                  settings.size === 1 ? "is-disabled" : ""
+                className={`flex-grow-0 w-[30px] h-[30px] select-none flex justify-center content-center bg-[--color-dark-1] cursor-pointer items-center rounded-tl-sm rounded-bl-sm border-r border-[--color-text-2] hover:bg-[--color-highlight-1] ${
+                  settings.size === 1 ? "opacity-50 pointer-events-none" : ""
                 }`}
                 onClick={() => changeSize(settings.size - 1)}
               >
                 -
               </div>
               <div
-                className={`offset-icon increment ${
-                  settings.size > 4 ? "is-disabled" : ""
+                className={`flex-grow-0 w-[30px] h-[30px] select-none flex justify-center content-center bg-[--color-dark-1] cursor-pointer items-center rounded-tr-sm rounded-br-sm hover:bg-[--color-highlight-1] ${
+                  settings.size > 4 ? "opacity-50 pointer-events-none" : ""
                 }`}
                 onClick={() => changeSize(settings.size + 1)}
               >
@@ -165,9 +166,9 @@ export const TextOptionsControl: React.FC<Props> = view(
             </div>
           </div>
         </div>
-        <div className="sidebar-settings-item">
-          <div className="sidebar-settings-label">Align</div>
-          <div className="sidebar-settings-input">
+        <div className="flex my-5 items-center">
+          <div className="flex-grow items-center flex">Align</div>
+          <div className="flex-grow-0 flex items-center">
             <Dropdown
               selected={settings.align}
               items={getTextAlignItems()}
@@ -175,22 +176,22 @@ export const TextOptionsControl: React.FC<Props> = view(
             />
           </div>
         </div>
-        <div className="sidebar-settings-item">
-          <div className="sidebar-settings-label">Offset X</div>
-          <div className="sidebar-settings-input">
-            <div className="offset-input">{settings.offsetX}</div>
-            <div className="offset-buttons">
+        <div className="flex my-5 items-center">
+          <div className="flex-grow items-center flex">Offset X</div>
+          <div className="flex-grow-0 flex items-center">
+            <div>{settings.offsetX}</div>
+            <div className="flex-grow-0 basis-10 flex ml-5">
               <div
-                className={`offset-icon decrement ${
-                  settings.offsetX < -19 ? "is-disabled" : ""
+                className={`flex-grow-0 w-[30px] h-[30px] select-none flex justify-center content-center bg-[--color-dark-1] cursor-pointer items-center rounded-tl-sm rounded-bl-sm border-r border-[--color-text-2] hover:bg-[--color-highlight-1] ${
+                  settings.offsetX < -19 ? "opacity-50 pointer-events-none" : ""
                 }`}
                 onClick={() => onXOffsetChange(settings.offsetX - 1)}
               >
                 -
               </div>
               <div
-                className={`offset-icon increment ${
-                  settings.offsetX > 19 ? "is-disabled" : ""
+                className={`flex-grow-0 w-[30px] h-[30px] select-none flex justify-center content-center bg-[--color-dark-1] cursor-pointer items-center rounded-tr-sm rounded-br-sm hover:bg-[--color-highlight-1] ${
+                  settings.offsetX > 19 ? "opacity-50 pointer-events-none" : ""
                 }`}
                 onClick={() => onXOffsetChange(settings.offsetX + 1)}
               >
@@ -199,22 +200,22 @@ export const TextOptionsControl: React.FC<Props> = view(
             </div>
           </div>
         </div>
-        <div className="sidebar-settings-item">
-          <div className="sidebar-settings-label">Offset Y</div>
-          <div className="sidebar-settings-input">
-            <div className="settings-input">{settings.offsetY}</div>
-            <div className="offset-buttons">
+        <div className="flex my-5 items-center">
+          <div className="flex-grow items-center flex">Offset Y</div>
+          <div className="flex-grow-0 flex items-center">
+            <div>{settings.offsetY}</div>
+            <div className="flex-grow-0 basis-10 flex ml-5">
               <div
-                className={`offset-icon decrement ${
-                  settings.offsetY < -19 ? "is-disabled" : ""
+                className={`flex-grow-0 w-[30px] h-[30px] select-none flex justify-center content-center bg-[--color-dark-1] cursor-pointer items-center rounded-tl-sm rounded-bl-sm border-r border-[--color-text-2] hover:bg-[--color-highlight-1] ${
+                  settings.offsetY < -19 ? "opacity-50 pointer-events-none" : ""
                 }`}
                 onClick={() => onYOffsetChange(settings.offsetY - 1)}
               >
                 -
               </div>
               <div
-                className={`offset-icon increment ${
-                  settings.offsetY > 19 ? "is-disabled" : ""
+                className={`flex-grow-0 w-[30px] h-[30px] select-none flex justify-center content-center bg-[--color-dark-1] cursor-pointer items-center rounded-tr-sm rounded-br-sm hover:bg-[--color-highlight-1] ${
+                  settings.offsetY > 19 ? "opacity-50 pointer-events-none" : ""
                 }`}
                 onClick={() => onYOffsetChange(settings.offsetY + 1)}
               >
@@ -223,21 +224,29 @@ export const TextOptionsControl: React.FC<Props> = view(
             </div>
           </div>
         </div>
-        <div className="sidebar-settings-item settings-color">
+        <div className="flex my-5 items-center border-b border-[--color-dark-3] pb-5">
           <Expandable
             title="Color"
             initialOpen={false}
             titleElement={clorpickerPreview}
             onExpand={updateHeightOnAnimationEnd}
+            className="[&_.expandable-icon]:w-0 [&_.expandable-icon]:overflow-hidden [&_.expandable-icon]:transition-[width] [&_.expandable-icon]:duration-[600ms] [&.is-expanded_.expandable-icon]:w-5 [&.is-expanded_.color-picker-preview]:mr-5"
           >
-            <HexColorPicker
-              color={settings.color}
-              onChange={(color) => onColorChange(color)}
-            />
+            <div className="p-5">
+              <HexColorPicker
+                color={settings.color}
+                onChange={(color) => onColorChange(color)}
+              />
+            </div>
           </Expandable>
         </div>
-        <div className="btn-delete-text">
-          <button onClick={() => removeTextItem(settings.line)}>delete</button>
+        <div className="flex justify-end mb-5 -mt-[30px]">
+          <button
+            className="cursor-pointer bg-[--color-dark-1] text-[--color-text] px-2.5 py-2.5 mt-2.5 block border-none rounded-md"
+            onClick={() => removeTextItem(settings.line)}
+          >
+            delete
+          </button>
         </div>
       </div>
     );

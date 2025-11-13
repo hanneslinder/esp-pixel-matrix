@@ -12,9 +12,9 @@ export const BrightnessSlider: React.FC<Props> = view(() => {
   };
 
   return (
-    <div className="settings-item brightness">
-      <div className="settings-item-label">Brightness</div>
-      <div className="settings-item-value brightness-slider">
+    <div className="border-b border-[--color-dark-3] pb-5 mb-5">
+      <div className="mb-2.5">Brightness</div>
+      <div className="flex items-center [&>svg]:translate-y-1.5">
         {appState.settings.brightness > 7 ? <Sun /> : <SunDim />}
         <input
           type="range"
@@ -23,6 +23,7 @@ export const BrightnessSlider: React.FC<Props> = view(() => {
           step="1.0"
           value={appState.settings.brightness}
           onChange={onBrightnessChange}
+          className="flex-grow mx-5 my-0"
         />
         <input
           type="number"
@@ -30,6 +31,7 @@ export const BrightnessSlider: React.FC<Props> = view(() => {
           max="15"
           value={appState.settings.brightness}
           onChange={onBrightnessChange}
+          className="bg-[--color-dark-1] text-[--color-text] outline-none border-none p-1.5 w-[30px] h-[30px] text-center rounded-md"
         />
       </div>
     </div>

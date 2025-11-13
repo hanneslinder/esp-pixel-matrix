@@ -9,8 +9,6 @@ import React, {
 } from "react";
 import { ChevronDown } from "lucide-react";
 
-import "./Expandable.css";
-
 interface Props extends PropsWithChildren {
   initialOpen?: boolean;
   title: string;
@@ -51,23 +49,25 @@ export const Expandable: React.FC<Props> = forwardRef(
     };
 
     return (
-      <div className={`expandable-section ${className}`}>
+      <div className={`flex flex-grow flex-col ${className || ""}`}>
         <div
-          className={`expandable ${active ? "is-expanded" : "is-collapsed"}`}
+          className="cursor-pointer flex items-center border-none outline-none mb-5 transition-[background-color] duration-300"
           onClick={toggleActive}
         >
-          <p className="expandable-title">{title}</p>
+          <p className="m-0 flex-grow">{title}</p>
           {titleElement}
           <ChevronDown
-            className={`expandable-icon ${active ? "rotate" : ""}`}
+            className={`ml-auto transition-transform duration-[600ms] ${
+              active ? "rotate-0" : "-rotate-90"
+            }`}
           />
         </div>
         <div
           ref={content}
           style={{ maxHeight: `${active ? height : 0}px` }}
-          className="expandable-content"
+          className="overflow-hidden transition-[max-height] duration-[600ms]"
         >
-          <div className="expandable-children">{children}</div>
+          <div>{children}</div>
         </div>
       </div>
     );

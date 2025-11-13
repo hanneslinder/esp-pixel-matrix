@@ -7,8 +7,6 @@ import { Tools } from "../SidebarRight";
 import { Canvas } from "../../canvas/Canvas";
 import { Brush, Eraser, PaintBucket, SprayCan, CircleX } from "lucide-react";
 
-import "./SidebarDraw.css";
-
 interface Props {
   getCanvas: () => Canvas;
 }
@@ -27,45 +25,59 @@ export const SidebarDraw: React.FC<Props> = view(({ getCanvas }) => {
     );
 
   return (
-    <div className={`sidebar-draw ${appState.tools.selected.toLowerCase()}`}>
-      <div className="tool-selection">
+    <div
+      className={
+        appState.tools.selected === Tools.ERASER
+          ? "[&_.color-picker]:opacity-25 [&_.color-picker]:pointer-events-none"
+          : ""
+      }
+    >
+      <div className="flex justify-around border-t border-b border-[--color-dark-3] [&>svg]:flex-grow [&>svg]:p-2.5">
         <Brush
-          className={`sidebar-icon ${
-            appState.tools.selected === Tools.BRUSH ? "is-active" : ""
+          className={`cursor-pointer flex flex-col items-center justify-center [&>svg]:stroke-[1px] ${
+            appState.tools.selected === Tools.BRUSH
+              ? "bg-[--color-highlight-1]"
+              : "hover:bg-[--color-dark-3]"
           }`}
           title={Tools.BRUSH}
           onClick={() => (appState.tools.selected = Tools.BRUSH)}
         />
         <Eraser
-          className={`sidebar-icon ${
-            appState.tools.selected === Tools.ERASER ? "is-active" : ""
+          className={`cursor-pointer flex flex-col items-center justify-center [&>svg]:stroke-[1px] ${
+            appState.tools.selected === Tools.ERASER
+              ? "bg-[--color-highlight-1]"
+              : "hover:bg-[--color-dark-3]"
           }`}
           title={Tools.ERASER}
           onClick={() => (appState.tools.selected = Tools.ERASER)}
         />
         <PaintBucket
-          className={`sidebar-icon ${
-            appState.tools.selected === Tools.FILL ? "is-active" : ""
+          className={`cursor-pointer flex flex-col items-center justify-center [&>svg]:stroke-[1px] ${
+            appState.tools.selected === Tools.FILL
+              ? "bg-[--color-highlight-1]"
+              : "hover:bg-[--color-dark-3]"
           }`}
           title={Tools.FILL}
           onClick={() => (appState.tools.selected = Tools.FILL)}
         />
         <SprayCan
-          className={`sidebar-icon ${
-            appState.tools.selected === Tools.GRADIENT ? "is-active" : ""
+          className={`cursor-pointer flex flex-col items-center justify-center [&>svg]:stroke-[1px] ${
+            appState.tools.selected === Tools.GRADIENT
+              ? "bg-[--color-highlight-1]"
+              : "hover:bg-[--color-dark-3]"
           }`}
           title={Tools.GRADIENT}
           onClick={() => (appState.tools.selected = Tools.GRADIENT)}
         />
         <CircleX
-          className={`sidebar-icon ${
-            appState.tools.selected === Tools.CLEAR ? "is-active" : ""
-          }`}
+          className="cursor-pointer flex flex-col items-center justify-center [&>svg]:stroke-[1px] hover:bg-[--color-dark-3]"
           onClick={() => getCanvas().clear()}
           title="Clear"
         />
       </div>
-      <div className="color-picker">{renderColorPicker()}</div>
+      <div className="flex justify-center py-12 border-b border-[--color-dark-3] color-picker">
+        {renderColorPicker()}
+      </div>
     </div>
   );
 });
