@@ -8,13 +8,14 @@
 // Forward declarations
 class MatrixController;
 class TextDisplayHandler;
+class CustomDataHandler;
 
 namespace WebSocketHandler {
 
 // Initialize the WebSocket handler with required dependencies
 void init(MatrixController* matrixCtrl, TextItem* textItems, AsyncWebSocket* websocket,
     char* socketBuffer, int* bufferIndex, const int bufferSize,
-    TextDisplayHandler* textDisplayHandler);
+    TextDisplayHandler* textDisplayHandler, CustomDataHandler* customDataHandler);
 
 // Main WebSocket message handler
 void handleMessage(void* arg, uint8_t* data, size_t len);

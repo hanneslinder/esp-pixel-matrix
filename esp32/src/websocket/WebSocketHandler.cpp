@@ -1,5 +1,6 @@
 #include "WebSocketHandler.h"
 #include "../config/settings.h"
+#include "../data/CustomDataHandler.h"
 #include "../display/TextDisplayHandler.h"
 #include "../matrix/MatrixController.h"
 #include "../utils/utils.h"
@@ -14,6 +15,8 @@ extern int compositionMode;
 extern int brightness;
 extern boolean showText;
 extern boolean lastshowText;
+
+// Custom data externals (for backward compatibility with UI)
 extern int customDataUpdateInterval;
 extern boolean customDataEnabled;
 extern char customDataServer[128];
@@ -31,6 +34,7 @@ static char* socketData = nullptr;
 static int* currSocketBufferIndex = nullptr;
 static int socketBufferSize = 0;
 static TextDisplayHandler* textDisplay = nullptr;
+static CustomDataHandler* customData = nullptr;
 
 // ============================================================================
 // INITIALIZATION
@@ -38,7 +42,7 @@ static TextDisplayHandler* textDisplay = nullptr;
 
 void init(MatrixController* matrixCtrl, TextItem* textItems, AsyncWebSocket* websocket,
     char* socketBuffer, int* bufferIndex, const int bufferSize,
-    TextDisplayHandler* textDisplayHandler)
+    TextDisplayHandler* textDisplayHandler, CustomDataHandler* customDataHandler)
 {
   matrix = matrixCtrl;
   textContent = textItems;
@@ -47,6 +51,7 @@ void init(MatrixController* matrixCtrl, TextItem* textItems, AsyncWebSocket* web
   currSocketBufferIndex = bufferIndex;
   socketBufferSize = bufferSize;
   textDisplay = textDisplayHandler;
+  customData = customDataHandler;
 
   Serial.println("WebSocketHandler initialized");
 }
@@ -186,20 +191,32 @@ void handleSetLocale(JsonDocument& doc)
 
 void handleCustomData(JsonDocument& doc)
 {
-  JsonObject customData = doc["options"].as<JsonObject>();
+  JsonObject customDataObj = doc["options"].as<JsonObject>();
 
-  if (customData["updateInterval"] != 0 && customData["updateInterval"] >= -1) {
-    customDataEnabled = true;
-    customDataUpdateInterval = customData["updateInterval"];
+  if (customDataObj["updateInterval"] != 0 && customDataObj["updateInterval"] >= -1) {
+    int interval = customDataObj["updateInterval"];
 
-    if (customData["server"] != 0) {
-      String s = customData["server"];
-      strlcpy(customDataServer, s.c_str(), sizeof(customDataServer));
+    if (customDataObj["server"] != 0) {
+      String serverUrl = customDataObj["server"];
+
+      if (customData != nullptr) {
+        customData->setEnabled(true);
+        customData->setUpdateInterval(interval);
+        customData->setServerUrl(serverUrl.c_str());
+      }
+
+      // Update global variables for backward compatibility with UI
+      customDataEnabled = true;
+      customDataUpdateInterval = interval;
+      strlcpy(customDataServer, serverUrl.c_str(), sizeof(customDataServer));
 
       Serial.println("Enabled custom data");
-      Serial.println(customDataServer);
+      Serial.println(serverUrl);
     }
   } else {
+    if (customData != nullptr) {
+      customData->setEnabled(false);
+    }
     customDataEnabled = false;
   }
 }

@@ -18,6 +18,7 @@
 #include "config/pins.h"
 #include "config/secrets.h"
 #include "config/settings.h"
+#include "data/CustomDataHandler.h"
 #include "display/TextDisplayHandler.h"
 #include "input/ResetButtonHandler.h"
 #include "matrix/MatrixController.h"
@@ -62,11 +63,10 @@ TextItem textContent[5]
 char* socketData;
 int currSocketBufferIndex = 0;
 
-// custom data
+// custom data - kept for WebSocketHandler access
 int customDataUpdateInterval = -1;
 boolean customDataEnabled = false;
 char customDataServer[128] = "";
-unsigned long lastCustomDataUpdate = 0;
 
 static unsigned long lastHeapCheck = 0;
 static size_t minFreeHeap = SIZE_MAX;
@@ -78,6 +78,7 @@ WiFiConnectionHandler wifiHandler(server);
 ResetButtonHandler resetButton(RESET_PIN, RESET_SHORT_PRESS_TIME);
 TextDisplayHandler textDisplay(matrix, textContent, 5);
 WebServerHandler webServer(server, ws);
+CustomDataHandler customData;
 
 void initMatrix() { matrix.begin(); }
 
@@ -114,53 +115,9 @@ void initWebSocket()
 
   // Initialize WebSocket handler with dependencies
   WebSocketHandler::init(&matrix, textContent, &ws, socketData, &currSocketBufferIndex,
-      SOCKET_DATA_SIZE, &textDisplay);
+      SOCKET_DATA_SIZE, &textDisplay, &customData);
 
   Serial.println("WebSocket initialized with safety limits");
-}
-
-String httpGETRequest(const char* serverName)
-{
-  HTTPClient http;
-
-  http.begin(serverName);
-  int httpResponseCode = http.GET();
-
-  String payload = "{}";
-
-  if (httpResponseCode > 0) {
-    Serial.print("HTTP Response code: ");
-    Serial.println(httpResponseCode);
-    payload = http.getString();
-  } else {
-    Serial.print("Error code: ");
-    Serial.println(httpResponseCode);
-  }
-  http.end();
-
-  return payload;
-}
-
-// Custom data allows the esp32 to poll data from remote server.
-// This should work but is currently not implemented in the browser UI
-void handleCustomData()
-{
-  // UpdateInterval is in seconds
-  if (millis() - lastCustomDataUpdate > customDataUpdateInterval * 1000) {
-    lastCustomDataUpdate = millis();
-
-    char interval[16];
-    itoa(customDataUpdateInterval, interval, 10);
-
-    String data = httpGETRequest(customDataServer);
-
-    Serial.println("New data :)");
-    Serial.println(data);
-
-    // textLayer.clear();
-    // textLayer.drawText(customDataServer, MIDDLE, NULL, timeColor, 2, -4);
-    // textLayer.drawText(interval, BOTTOM, NULL, dateColor, 1, -2);
-  }
 }
 
 void checkHeapAndLog()
@@ -267,9 +224,10 @@ void loop()
     matrix.getTextLayer().println(resetTimeString);
   } else if (showText == true) {
     textDisplay.renderText();
-  } else if (customDataUpdateInterval > -1 && strlen(customDataServer) > 0) {
-    handleCustomData();
   }
+
+  // Update custom data if enabled
+  customData.update();
 
   ws.cleanupClients();
 
