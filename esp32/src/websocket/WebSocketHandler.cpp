@@ -188,10 +188,10 @@ void handleSetTimeZone(JsonDocument& doc)
   const char* tz = doc["timezone"];
   config.setTimezone(tz);
   strlcpy(currentTimezone, tz, sizeof(currentTimezone)); // Keep for backward compatibility
-  configTzTime(currentTimezone, config.getNtpServer());
+  configTzTime(config.getTimezone(), config.getNtpServer());
   config.save();
   broadcastConfigUpdate();
-  Serial.printf("Timezone updated to: %s\n", currentTimezone);
+  Serial.printf("Timezone updated to: %s\n", tz);
 }
 
 void handleSetLocale(JsonDocument& doc)
@@ -305,7 +305,7 @@ void sendState()
   JsonArray textArray = doc["text"].to<JsonArray>();
 
   doc["action"] = "matrixSettings";
-  
+
   // Use ConfigManager for all configuration values
   doc["customData"] = config.isCustomDataEnabled();
   doc["customDataServer"] = config.getCustomDataServer();
