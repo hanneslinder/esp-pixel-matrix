@@ -1,5 +1,6 @@
 #include "WebSocketHandler.h"
 #include "../config/settings.h"
+#include "../display/TextDisplayHandler.h"
 #include "../matrix/MatrixController.h"
 #include "../utils/utils.h"
 #include "SPIFFS.h"
@@ -9,7 +10,6 @@
 // External dependencies
 extern const char* ntpServer;
 extern char currentTimezone[64];
-extern char currentLocale[32];
 extern int compositionMode;
 extern int brightness;
 extern boolean showText;
@@ -20,7 +20,6 @@ extern char customDataServer[128];
 
 // Forward declaration of external functions
 extern void resetWifi();
-extern void setLocale();
 
 namespace WebSocketHandler {
 
@@ -31,13 +30,15 @@ static AsyncWebSocket* ws = nullptr;
 static char* socketData = nullptr;
 static int* currSocketBufferIndex = nullptr;
 static int socketBufferSize = 0;
+static TextDisplayHandler* textDisplay = nullptr;
 
 // ============================================================================
 // INITIALIZATION
 // ============================================================================
 
 void init(MatrixController* matrixCtrl, TextItem* textItems, AsyncWebSocket* websocket,
-    char* socketBuffer, int* bufferIndex, const int bufferSize)
+    char* socketBuffer, int* bufferIndex, const int bufferSize,
+    TextDisplayHandler* textDisplayHandler)
 {
   matrix = matrixCtrl;
   textContent = textItems;
@@ -45,6 +46,7 @@ void init(MatrixController* matrixCtrl, TextItem* textItems, AsyncWebSocket* web
   socketData = socketBuffer;
   currSocketBufferIndex = bufferIndex;
   socketBufferSize = bufferSize;
+  textDisplay = textDisplayHandler;
 
   Serial.println("WebSocketHandler initialized");
 }
@@ -177,8 +179,9 @@ void handleSetTimeZone(JsonDocument& doc)
 void handleSetLocale(JsonDocument& doc)
 {
   const char* loc = doc["locale"];
-  strlcpy(currentLocale, loc, sizeof(currentLocale));
-  setLocale();
+  if (textDisplay != nullptr) {
+    textDisplay->setLocale(loc);
+  }
 }
 
 void handleCustomData(JsonDocument& doc)
@@ -261,7 +264,7 @@ void sendState()
   doc["compositionMode"] = compositionMode;
   doc["brightness"] = brightness;
   doc["timezone"] = currentTimezone;
-  doc["locale"] = currentLocale;
+  doc["locale"] = (textDisplay != nullptr) ? textDisplay->getCurrentLocale() : "en_US.UTF-8";
 
   for (int i = 0; i < 5; i++) {
     if (strcmp(textContent[i].text, "") != 0) {

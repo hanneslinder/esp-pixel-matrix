@@ -18,6 +18,7 @@
 #include "config/pins.h"
 #include "config/secrets.h"
 #include "config/settings.h"
+#include "display/TextDisplayHandler.h"
 #include "input/ResetButtonHandler.h"
 #include "matrix/MatrixController.h"
 #include "ota/OTAUpdateHandler.h"
@@ -41,11 +42,6 @@ MatrixController matrix;
 
 bool startupFinished = false;
 
-AsyncWebServer server(80);
-AsyncWebSocket ws("/ws");
-WiFiConnectionHandler wifiHandler(server);
-ResetButtonHandler resetButton(RESET_PIN, RESET_SHORT_PRESS_TIME);
-
 // clock options
 boolean showText = true;
 boolean lastshowText = false;
@@ -58,7 +54,6 @@ int brightness = DEFAULT_BRIGHTNESS;
 
 // Mutable copies for runtime configuration
 char currentTimezone[64];
-char currentLocale[32];
 
 TextItem textContent[5]
     = { { "%H:%M", 0xFFFF, 1, -3, 1, 2, 1 }, { "%d.%b", 0xFFFF, 3, -1, 1, 1, 2 } };
@@ -74,6 +69,13 @@ unsigned long lastCustomDataUpdate = 0;
 
 static unsigned long lastHeapCheck = 0;
 static size_t minFreeHeap = SIZE_MAX;
+
+// Initialize handlers and server
+AsyncWebServer server(80);
+AsyncWebSocket ws("/ws");
+WiFiConnectionHandler wifiHandler(server);
+ResetButtonHandler resetButton(RESET_PIN, RESET_SHORT_PRESS_TIME);
+TextDisplayHandler textDisplay(matrix, textContent, 5);
 
 void initMatrix() { matrix.begin(); }
 
@@ -100,53 +102,6 @@ void onEvent(AsyncWebSocket* server, AsyncWebSocketClient* client, AwsEventType 
 
 void resetWifi() { wifiHandler.reset(); }
 
-// OTA UPDATE HANDLING START
-// OTA-specific handlers moved to ota/OTAUpdateHandler.{h,cpp}
-
-void setLocale()
-{
-  if (setlocale(LC_ALL, currentLocale) == NULL) {
-    Serial.printf("Unable to set locale %s", currentLocale);
-    return;
-  }
-
-  std::setlocale(LC_TIME, currentLocale);
-  std::setlocale(LC_NUMERIC, currentLocale);
-
-  Serial.printf("Set locale to %s", currentLocale);
-}
-
-// OTA UPDATE HANDLING END
-
-void printTextItem(char text[], TextItem& t)
-{
-  textPosition pos = static_cast<textPosition>(t.line);
-
-  if (t.font == 0) {
-    matrix.drawText(text, pos, NULL, t.color, t.size, t.offsetX, t.offsetY, t.align);
-  } else {
-    matrix.drawText(text, pos, &Picopixel, t.color, t.size, t.offsetX, t.offsetY, t.align);
-  }
-}
-
-void printText()
-{
-  struct tm timeinfo;
-
-  if (!getLocalTime(&timeinfo)) {
-    Serial.println("Failed to obtain time");
-    return;
-  }
-  // textLayer.clear();
-  matrix.getTextLayer().clear();
-
-  for (TextItem t : textContent) {
-    char parsedDate[32];
-    strftime(parsedDate, 32, t.text, &timeinfo);
-    printTextItem(parsedDate, t);
-  }
-}
-
 void initWebSocket()
 {
   ws.onEvent(onEvent);
@@ -156,8 +111,8 @@ void initWebSocket()
   ws.enable(true);
 
   // Initialize WebSocket handler with dependencies
-  WebSocketHandler::init(
-      &matrix, textContent, &ws, socketData, &currSocketBufferIndex, SOCKET_DATA_SIZE);
+  WebSocketHandler::init(&matrix, textContent, &ws, socketData, &currSocketBufferIndex,
+      SOCKET_DATA_SIZE, &textDisplay);
 
   Serial.println("WebSocket initialized with safety limits");
 }
@@ -265,7 +220,8 @@ void setup()
   Serial.begin(115200);
   SPIFFS.begin();
 
-  setLocale();
+  // Initialize text display and set locale
+  textDisplay.setLocale(locale);
 
   // char host[16];
   // snprintf(host, 16, "ESP%012llX", ESP.getEfuseMac());
@@ -280,7 +236,6 @@ void setup()
 
   // Initialize mutable configuration with defaults
   strlcpy(currentTimezone, timezone, sizeof(currentTimezone));
-  strlcpy(currentLocale, locale, sizeof(currentLocale));
 
   // Initialize WiFi connection
   wifiHandler.begin(useCaptivePortal, ssid, password);
@@ -337,7 +292,7 @@ void loop()
     matrix.getTextLayer().setCursor(0, 16);
     matrix.getTextLayer().println(resetTimeString);
   } else if (showText == true) {
-    printText();
+    textDisplay.renderText();
   } else if (customDataUpdateInterval > -1 && strlen(customDataServer) > 0) {
     handleCustomData();
   }
