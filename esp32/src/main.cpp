@@ -15,6 +15,7 @@
 #include <Wire.h>
 #include <sstream>
 
+#include "config/ConfigManager.h"
 #include "config/pins.h"
 #include "config/secrets.h"
 #include "config/settings.h"
@@ -31,12 +32,8 @@
 
 #define U_PART U_SPIFFS
 
-// Configuration variable definitions (declared in settings.h)
-const char* ntpServer = "at.pool.ntp.org";
-const char* portalIP = "10.0.1.1";
-const char* timezone = "CET-1CEST,M3.5.0,M10.5.0/3";
-const char* locale = "en_US.UTF-8";
-const char* hostname = "pixelclock";
+// Get singleton instance of ConfigManager
+ConfigManager& config = ConfigManager::getInstance();
 
 // Moved OTA progress state into OTAUpdate module
 
@@ -44,15 +41,10 @@ MatrixController matrix;
 
 bool startupFinished = false;
 
-// clock options
+// clock options - to be migrated to state manager
 boolean showText = true;
 boolean lastshowText = false;
 boolean forceUpdateTime = false;
-uint16_t timeColor = 0xFFFF;
-uint16_t dateColor = 0xFFFF;
-
-int compositionMode = 0;
-int brightness = DEFAULT_BRIGHTNESS;
 
 // Mutable copies for runtime configuration
 char currentTimezone[64];
@@ -109,15 +101,10 @@ void initWebSocket()
 {
   ws.onEvent(onEvent);
   server.addHandler(&ws);
-
-  // Configure WebSocket for better stability
   ws.enable(true);
 
-  // Initialize WebSocket handler with dependencies
   WebSocketHandler::init(&matrix, textContent, &ws, socketData, &currSocketBufferIndex,
       SOCKET_DATA_SIZE, &textDisplay, &customData);
-
-  Serial.println("WebSocket initialized with safety limits");
 }
 
 void checkHeapAndLog()
@@ -151,25 +138,38 @@ void setup()
   Serial.begin(115200);
   SPIFFS.begin();
 
-  textDisplay.setLocale(locale);
+  // Initialize ConfigManager first
+  config.begin();
+
+  // Initialize text display with locale from config
+  textDisplay.setLocale(config.getLocale());
+
   socketData = (char*)malloc(SOCKET_DATA_SIZE * sizeof(char));
 
+  // Initialize reset button
   resetButton.begin();
   resetButton.onLongPress([]() { resetWifi(); });
 
-  strlcpy(currentTimezone, timezone, sizeof(currentTimezone));
+  // Copy timezone from config for runtime use
+  strlcpy(currentTimezone, config.getTimezone(), sizeof(currentTimezone));
 
+  // Initialize WiFi
   wifiHandler.begin(useCaptivePortal, ssid, password);
 
+  // Initialize matrix
   initMatrix();
 
-  matrix.setBrightness(brightness);
+  // Apply brightness from config
+  matrix.setBrightness(config.getBrightness());
+  Serial.printf("Set initial brightness to %d\n", config.getBrightness());
 
+  // Initialize WebSocket and Web Server
   initWebSocket();
-
   webServer.begin();
 
-  configTzTime(currentTimezone, ntpServer);
+  // Configure timezone and NTP
+  configTzTime(config.getTimezone(), config.getNtpServer());
+  Serial.printf("Configured NTP: %s, Timezone: %s\n", config.getNtpServer(), config.getTimezone());
 }
 
 void loop()
@@ -181,7 +181,7 @@ void loop()
     const String ip = wifiHandler.getIPAddress();
 
     matrix.drawText(ip.c_str(), MIDDLE, &Picopixel, 0xFFFF, 1, 0, 0, 1);
-    matrix.render(compositionMode);
+    matrix.render(config.getCompositionMode());
 
     delay(6000);
 
@@ -202,7 +202,7 @@ void loop()
 
   ws.cleanupClients();
 
-  matrix.render(compositionMode);
+  matrix.render(config.getCompositionMode());
 
   if (millis() - lastHeapCheck > 300000) {
     lastHeapCheck = millis();

@@ -1,4 +1,5 @@
 #include "WebSocketHandler.h"
+#include "../config/ConfigManager.h"
 #include "../config/settings.h"
 #include "../data/CustomDataHandler.h"
 #include "../display/TextDisplayHandler.h"
@@ -9,10 +10,7 @@
 #include <Fonts/Picopixel.h>
 
 // External dependencies
-extern const char* ntpServer;
 extern char currentTimezone[64];
-extern int compositionMode;
-extern int brightness;
 extern boolean showText;
 extern boolean lastshowText;
 
@@ -26,7 +24,9 @@ extern void resetWifi();
 
 namespace WebSocketHandler {
 
-// Module-level state
+// Get ConfigManager instance
+static ConfigManager& config = ConfigManager::getInstance();
+
 static MatrixController* matrix = nullptr;
 static TextItem* textContent = nullptr;
 static AsyncWebSocket* ws = nullptr;
@@ -156,11 +156,16 @@ void handleSetText(JsonDocument& doc)
 // MESSAGE HANDLERS - Configuration Operations
 // ============================================================================
 
-void handleCompositionMode(JsonDocument& doc) { compositionMode = doc["mode"]; }
+void handleCompositionMode(JsonDocument& doc)
+{
+  int mode = doc["mode"];
+  config.setCompositionMode(mode);
+  config.save();
+}
 
 void handleSetBrightness(JsonDocument& doc)
 {
-  brightness = doc["brightness"].as<int>();
+  int brightness = doc["brightness"].as<int>();
   int clampedBrightness = max(MIN_BRIGHTNESS, min(brightness, MAX_BRIGHTNESS));
 
   if (brightness < MIN_BRIGHTNESS) {
@@ -170,14 +175,17 @@ void handleSetBrightness(JsonDocument& doc)
 
   Serial.printf("setBrightness: requested=%d, actual=%d (range: %d-%d)\n", brightness,
       clampedBrightness, MIN_BRIGHTNESS, MAX_BRIGHTNESS);
+
+  config.setBrightness(clampedBrightness);
   matrix->setBrightness(clampedBrightness);
+  config.save();
 }
 
 void handleSetTimeZone(JsonDocument& doc)
 {
   const char* tz = doc["timezone"];
   strlcpy(currentTimezone, tz, sizeof(currentTimezone));
-  configTzTime(currentTimezone, ntpServer);
+  configTzTime(currentTimezone, config.getNtpServer());
   Serial.printf("Timezone updated to: %s\n", currentTimezone);
 }
 
@@ -205,7 +213,6 @@ void handleCustomData(JsonDocument& doc)
         customData->setServerUrl(serverUrl.c_str());
       }
 
-      // Update global variables for backward compatibility with UI
       customDataEnabled = true;
       customDataUpdateInterval = interval;
       strlcpy(customDataServer, serverUrl.c_str(), sizeof(customDataServer));
@@ -278,8 +285,8 @@ void sendState()
   doc["customData"] = customDataEnabled;
   doc["customDataServer"] = customDataServer;
   doc["customDataInterval"] = customDataUpdateInterval;
-  doc["compositionMode"] = compositionMode;
-  doc["brightness"] = brightness;
+  doc["compositionMode"] = config.getCompositionMode();
+  doc["brightness"] = config.getBrightness();
   doc["timezone"] = currentTimezone;
   doc["locale"] = (textDisplay != nullptr) ? textDisplay->getCurrentLocale() : "en_US.UTF-8";
 
@@ -310,7 +317,6 @@ void dispatchAction(const char* action, JsonDocument& doc)
 {
   Serial.printf("Processing action: %s\n", action);
 
-  // Use a simple if-else chain organized by category
   // Drawing operations
   if (isStringEqual(action, "drawpixel")) {
     handleDrawPixel(doc);
@@ -420,7 +426,6 @@ bool handleMultiPacket(AwsFrameInfo* info, uint8_t* data, size_t len)
       socketData[*currSocketBufferIndex] = '\0';
     }
 
-    // Use JsonDocument for automatic memory management
     JsonDocument doc;
 
     DeserializationError error = deserializeJson(doc, socketData, *currSocketBufferIndex);
@@ -471,7 +476,7 @@ void handleMessage(void* arg, uint8_t* data, size_t len)
   else {
     handleMultiPacket(info, data, len);
   }
-}
+} // end handleMessage
 
 // ============================================================================
 // EVENT HANDLERS
