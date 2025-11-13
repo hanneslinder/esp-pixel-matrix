@@ -151,56 +151,30 @@ void setup()
   Serial.begin(115200);
   SPIFFS.begin();
 
-  // Initialize text display and set locale
   textDisplay.setLocale(locale);
-
-  // char host[16];
-  // snprintf(host, 16, "ESP%012llX", ESP.getEfuseMac());
-  // MDNS.begin(host);
-  // MDNS.addService("http", "tcp", 80);
-
   socketData = (char*)malloc(SOCKET_DATA_SIZE * sizeof(char));
 
-  // Initialize reset button
   resetButton.begin();
   resetButton.onLongPress([]() { resetWifi(); });
 
-  // Initialize mutable configuration with defaults
   strlcpy(currentTimezone, timezone, sizeof(currentTimezone));
 
-  // Initialize WiFi connection
   wifiHandler.begin(useCaptivePortal, ssid, password);
 
   initMatrix();
 
-  // Apply default brightness from settings
   matrix.setBrightness(brightness);
-  Serial.printf("Set initial brightness to %d\n", brightness);
 
   initWebSocket();
+
   webServer.begin();
 
-  // Set timezone
-  if (currentTimezone != NULL) {
-    Serial.printf("Setting timezone to %s\n", currentTimezone);
-  } else {
-    Serial.println("Timezone not set");
-  }
-
-  if (ntpServer != NULL) {
-    Serial.printf("Setting NTP server to %s\n", ntpServer);
-  } else {
-    Serial.println("NTP server not set");
-  }
   configTzTime(currentTimezone, ntpServer);
-
-  // WiFi.setSleep(false);
 }
 
 void loop()
 {
   wifiHandler.loop();
-
   resetButton.update();
 
   if (startupFinished == false) {
@@ -208,8 +182,6 @@ void loop()
 
     matrix.drawText(ip.c_str(), MIDDLE, &Picopixel, 0xFFFF, 1, 0, 0, 1);
     matrix.render(compositionMode);
-
-    Serial.println("Startup finished, showing IP address for 6 seconds...");
 
     delay(6000);
 
@@ -226,7 +198,6 @@ void loop()
     textDisplay.renderText();
   }
 
-  // Update custom data if enabled
   customData.update();
 
   ws.cleanupClients();
@@ -238,7 +209,6 @@ void loop()
     checkHeapAndLog();
   }
 
-  // Check WiFi connection status
   wifiHandler.checkConnection();
 
   delay(100);

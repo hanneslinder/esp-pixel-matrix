@@ -2,7 +2,6 @@
 #include <ArduinoJson.h>
 #include <ESPmDNS.h>
 
-// External declarations for portal credentials
 extern const char* portalSsid;
 extern const char* portalPassword;
 
@@ -58,14 +57,12 @@ void WiFiConnectionHandler::connectToWiFi(const char* ssid, const char* password
     delay(100);
   }
 
-  Serial.println("Connected to WiFi");
-  Serial.print("IP address: ");
+  Serial.print("Connected - IP address: ");
   Serial.println(WiFi.localIP());
 }
 
 void WiFiConnectionHandler::initCaptivePortal()
 {
-  // Initialize ESPConnect if not already done
   if (_espConnect == nullptr) {
     _espConnect = new Mycila::ESPConnect(_server);
   }
@@ -76,12 +73,9 @@ void WiFiConnectionHandler::initCaptivePortal()
     ESP.restart();
   });
 
-  // network state listener
   _espConnect->listen(
       [](__unused Mycila::ESPConnect::State previous, __unused Mycila::ESPConnect::State state) {
         JsonDocument doc;
-        // Note: We need to access the espConnect instance here
-        // This is safe because the lambda captures the this pointer implicitly
         serializeJsonPretty(doc, Serial);
         Serial.println();
       });
@@ -116,7 +110,6 @@ void WiFiConnectionHandler::checkConnection()
         "Reconnection attempt %d/%d\n", _wifiReconnectAttempts, MAX_WIFI_RECONNECT_ATTEMPTS);
 
     if (_wifiReconnectAttempts >= MAX_WIFI_RECONNECT_ATTEMPTS) {
-      // If multiple reconnect attempts failed, try full re-initialization
       Serial.println(
           "Multiple reconnect attempts failed, performing full WiFi re-initialization...");
       WiFi.disconnect(true);
@@ -133,13 +126,11 @@ void WiFiConnectionHandler::checkConnection()
       _wifiReconnectAttempts = 0;
       _wifiReconnectStartTime = 0;
     } else {
-      // Try simple reconnect first
       WiFi.disconnect();
       delay(100);
       WiFi.reconnect();
     }
   } else {
-    // WiFi is connected, reset reconnect counter
     if (_wifiReconnectAttempts > 0) {
       Serial.printf("WiFi reconnected successfully after %d attempts (took %lu ms)\n",
           _wifiReconnectAttempts, millis() - _wifiReconnectStartTime);

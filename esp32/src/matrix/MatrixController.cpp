@@ -33,7 +33,7 @@ void MatrixController::begin()
   matrix->begin();
 
   // Start with minimum safe brightness (will be set from settings in main.cpp)
-  // Values below 3 often don't work with HUB75 panels
+  // Values below 3 result in black screen
   matrix->setBrightness8(3);
 
   bgLayer.clear();

@@ -5,7 +5,7 @@
 #include <HTTPClient.h>
 
 class CustomDataHandler {
-public:
+  public:
   CustomDataHandler();
 
   void setEnabled(bool enabled);
@@ -19,7 +19,7 @@ public:
   const char* getServerUrl() const;
   String getLastData() const;
 
-private:
+  private:
   String httpGETRequest(const char* serverUrl);
 
   bool _enabled;

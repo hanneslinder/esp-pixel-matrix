@@ -10,22 +10,17 @@ WebServerHandler::WebServerHandler(AsyncWebServer& server, AsyncWebSocket& ws)
 
 void WebServerHandler::begin()
 {
-  // Serve static files from SPIFFS
   _server.serveStatic("/", SPIFFS, "/").setCacheControl("max-age=14400");
 
-  // Serve index.html with template processing
   _server.on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
     request->send(SPIFFS, "/index.html", String(), false, processHtmlTemplate);
   });
 
-  // Serve CSS and JS files
   _server.serveStatic("/main.css", SPIFFS, "/main.css").setCacheControl("max-age=14400");
   _server.serveStatic("/main.js", SPIFFS, "/main.js").setCacheControl("max-age=14400");
 
-  // Initialize OTA update routes
   OTAUpdate::init(_server, _ws);
 
-  // Start the server
   _server.begin();
 
   Serial.println("Web server started");
