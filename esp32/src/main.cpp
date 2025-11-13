@@ -23,6 +23,7 @@
 #include "types/CommonTypes.h"
 #include "utils/utils.h"
 #include "websocket/WebSocketHandler.h"
+#include "wifi/WiFiConnectionHandler.h"
 
 #define U_PART U_SPIFFS
 
@@ -46,10 +47,8 @@ unsigned long resetButtonPressDuration = 0;
 bool startupFinished = false;
 
 AsyncWebServer server(80);
-Mycila::ESPConnect espConnect(server);
-uint32_t lastLog = 0;
-
 AsyncWebSocket ws("/ws");
+WiFiConnectionHandler wifiHandler(server);
 
 // clock options
 boolean showText = true;
@@ -65,13 +64,6 @@ int brightness = DEFAULT_BRIGHTNESS;
 char currentTimezone[64];
 char currentLocale[32];
 
-static unsigned long lastWiFiCheck = 0;
-static int wifiReconnectAttempts = 0;
-static const int MAX_WIFI_RECONNECT_ATTEMPTS = 5;
-static unsigned long wifiReconnectStartTime = 0;
-static unsigned long lastHeapCheck = 0;
-static size_t minFreeHeap = SIZE_MAX;
-
 TextItem textContent[5]
     = { { "%H:%M", 0xFFFF, 1, -3, 1, 2, 1 }, { "%d.%b", 0xFFFF, 3, -1, 1, 1, 2 } };
 
@@ -83,6 +75,9 @@ int customDataUpdateInterval = -1;
 boolean customDataEnabled = false;
 char customDataServer[128] = "";
 unsigned long lastCustomDataUpdate = 0;
+
+static unsigned long lastHeapCheck = 0;
+static size_t minFreeHeap = SIZE_MAX;
 
 void initMatrix() { matrix.begin(); }
 
@@ -107,19 +102,7 @@ void onEvent(AsyncWebSocket* server, AsyncWebSocketClient* client, AwsEventType 
   }
 }
 
-void resetWifi()
-{
-  Serial.println("Reset WIFI settings!");
-
-  // textLayer.clear();
-  // textLayer.drawText("Reset", MIDDLE, NULL, timeColor, 6, -4);
-
-  // wifiManager.resetSettings();
-  delay(1000);
-
-  ESP.restart();
-  delay(1000);
-}
+void resetWifi() { wifiHandler.reset(); }
 
 // OTA UPDATE HANDLING START
 // OTA-specific handlers moved to ota/OTAUpdateHandler.{h,cpp}
@@ -211,50 +194,6 @@ void initWebServer()
   server.begin();
 }
 
-void connectToWiFi()
-{
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid, password);
-
-  Serial.println("\nConnecting");
-
-  while (WiFi.status() != WL_CONNECTED) {
-    Serial.print(".");
-    delay(100);
-  }
-
-  Serial.println("Connected to WiFi");
-  Serial.print("IP address: ");
-  Serial.println(WiFi.localIP());
-}
-
-void initCaptivePortal()
-{
-  server.on("/clear", HTTP_GET, [&](AsyncWebServerRequest* request) {
-    espConnect.clearConfiguration();
-    request->send(200);
-    ESP.restart();
-  });
-
-  // network state listener
-  espConnect.listen(
-      [](__unused Mycila::ESPConnect::State previous, __unused Mycila::ESPConnect::State state) {
-        JsonDocument doc;
-        espConnect.toJson(doc.to<JsonObject>());
-        serializeJsonPretty(doc, Serial);
-        Serial.println();
-      });
-
-  espConnect.setAutoRestart(true);
-  espConnect.setBlocking(true);
-
-  Serial.println("Trying to connect to saved WiFi or will start portal...");
-
-  espConnect.begin("arduino", portalSsid, portalPassword);
-
-  Serial.println("ESPConnect completed, continuing setup()...");
-}
-
 String httpGETRequest(const char* serverName)
 {
   HTTPClient http;
@@ -339,8 +278,7 @@ void checkHeapAndLog()
   Serial.printf("Min Free Heap: %u bytes\n", minHeap);
   Serial.printf("Heap Size: %u bytes\n", heapSize);
   Serial.printf("WiFi Status: %s (RSSI: %d dBm)\n",
-      WiFi.status() == WL_CONNECTED ? "Connected" : "Disconnected",
-      WiFi.status() == WL_CONNECTED ? WiFi.RSSI() : 0);
+      wifiHandler.isConnected() ? "Connected" : "Disconnected", wifiHandler.getRSSI());
   Serial.printf("WebSocket Clients: %u\n", ws.count());
   Serial.printf("Uptime: %lu seconds\n", millis() / 1000);
   Serial.println("====================");
@@ -370,11 +308,8 @@ void setup()
   strlcpy(currentTimezone, timezone, sizeof(currentTimezone));
   strlcpy(currentLocale, locale, sizeof(currentLocale));
 
-  if (useCaptivePortal == true) {
-    initCaptivePortal();
-  } else {
-    connectToWiFi();
-  }
+  // Initialize WiFi connection
+  wifiHandler.begin(useCaptivePortal, ssid, password);
 
   initMatrix();
 
@@ -404,14 +339,12 @@ void setup()
 
 void loop()
 {
-  if (useCaptivePortal == true) {
-    espConnect.loop();
-  }
+  wifiHandler.loop();
 
   checkResetButton();
 
   if (startupFinished == false) {
-    const String ip = WiFi.localIP().toString();
+    const String ip = wifiHandler.getIPAddress();
 
     matrix.drawText(ip.c_str(), MIDDLE, &Picopixel, 0xFFFF, 1, 0, 0, 1);
     matrix.render(compositionMode);
@@ -444,53 +377,8 @@ void loop()
     checkHeapAndLog();
   }
 
-  if (millis() - lastWiFiCheck > 30000) {
-    lastWiFiCheck = millis();
-
-    if (WiFi.status() != WL_CONNECTED) {
-      Serial.println("WiFi disconnected, attempting reconnection...");
-
-      if (wifiReconnectAttempts == 0) {
-        wifiReconnectStartTime = millis();
-      }
-
-      wifiReconnectAttempts++;
-      Serial.printf(
-          "Reconnection attempt %d/%d\n", wifiReconnectAttempts, MAX_WIFI_RECONNECT_ATTEMPTS);
-
-      if (wifiReconnectAttempts >= MAX_WIFI_RECONNECT_ATTEMPTS) {
-        // If multiple reconnect attempts failed, try full re-initialization
-        Serial.println(
-            "Multiple reconnect attempts failed, performing full WiFi re-initialization...");
-        WiFi.disconnect(true);
-        delay(1000);
-        WiFi.mode(WIFI_STA);
-
-        if (useCaptivePortal == true) {
-          Serial.println("Restarting ESP to reinitialize captive portal...");
-          ESP.restart();
-        } else {
-          WiFi.begin(ssid, password);
-        }
-
-        wifiReconnectAttempts = 0;
-        wifiReconnectStartTime = 0;
-      } else {
-        // Try simple reconnect first
-        WiFi.disconnect();
-        delay(100);
-        WiFi.reconnect();
-      }
-    } else {
-      // WiFi is connected, reset reconnect counter
-      if (wifiReconnectAttempts > 0) {
-        Serial.printf("WiFi reconnected successfully after %d attempts (took %lu ms)\n",
-            wifiReconnectAttempts, millis() - wifiReconnectStartTime);
-        wifiReconnectAttempts = 0;
-        wifiReconnectStartTime = 0;
-      }
-    }
-  }
+  // Check WiFi connection status
+  wifiHandler.checkConnection();
 
   delay(100);
 }
