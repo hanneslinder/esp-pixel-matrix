@@ -18,6 +18,7 @@
 #include "config/pins.h"
 #include "config/secrets.h"
 #include "config/settings.h"
+#include "input/ResetButtonHandler.h"
 #include "matrix/MatrixController.h"
 #include "ota/OTAUpdateHandler.h"
 #include "types/CommonTypes.h"
@@ -38,17 +39,12 @@ const char* hostname = "pixelclock";
 
 MatrixController matrix;
 
-int lastResetButtonState = HIGH;
-int currentResetButtonState = HIGH;
-unsigned long resetButtonPressedTime = 0;
-unsigned long resetButtonReleasedTime = 0;
-unsigned long resetButtonPressDuration = 0;
-
 bool startupFinished = false;
 
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
 WiFiConnectionHandler wifiHandler(server);
+ResetButtonHandler resetButton(RESET_PIN, RESET_SHORT_PRESS_TIME);
 
 // clock options
 boolean showText = true;
@@ -238,31 +234,6 @@ void handleCustomData()
   }
 }
 
-void checkResetButton()
-{
-  currentResetButtonState = digitalRead(RESET_PIN);
-
-  if (currentResetButtonState == LOW && lastResetButtonState == LOW) {
-    resetButtonPressDuration++;
-  }
-
-  if (lastResetButtonState == HIGH && currentResetButtonState == LOW) {
-    resetButtonPressedTime = millis();
-  } else if (lastResetButtonState == LOW && currentResetButtonState == HIGH) {
-    resetButtonReleasedTime = millis();
-    resetButtonPressDuration = 0;
-
-    long pressDuration = resetButtonReleasedTime - resetButtonPressedTime;
-
-    if (pressDuration > RESET_SHORT_PRESS_TIME) {
-      Serial.println("RESET BUTTON PRESS");
-      resetWifi();
-    }
-  }
-
-  lastResetButtonState = currentResetButtonState;
-}
-
 void checkHeapAndLog()
 {
   size_t freeHeap = ESP.getFreeHeap();
@@ -301,8 +272,11 @@ void setup()
   // MDNS.begin(host);
   // MDNS.addService("http", "tcp", 80);
 
-  pinMode(RESET_PIN, INPUT_PULLUP);
   socketData = (char*)malloc(SOCKET_DATA_SIZE * sizeof(char));
+
+  // Initialize reset button
+  resetButton.begin();
+  resetButton.onLongPress([]() { resetWifi(); });
 
   // Initialize mutable configuration with defaults
   strlcpy(currentTimezone, timezone, sizeof(currentTimezone));
@@ -341,7 +315,7 @@ void loop()
 {
   wifiHandler.loop();
 
-  checkResetButton();
+  resetButton.update();
 
   if (startupFinished == false) {
     const String ip = wifiHandler.getIPAddress();
@@ -354,9 +328,9 @@ void loop()
     delay(6000);
 
     startupFinished = true;
-  } else if (currentResetButtonState == LOW) {
+  } else if (resetButton.isPressed()) {
     char resetTimeString[16];
-    itoa(resetButtonPressDuration, resetTimeString, 10);
+    itoa(resetButton.getPressDuration(), resetTimeString, 10);
     matrix.getTextLayer().clear();
     matrix.getTextLayer().setCursor(0, 0);
     matrix.getTextLayer().println("Reset");
