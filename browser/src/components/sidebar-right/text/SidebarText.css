@@ -81,6 +81,7 @@
 			width: 40px;
 			height: 20px;
 			margin-right: 0px;
+			border-radius: 5px;
 			transition: margin 0.6s ease;
 		}
 	}

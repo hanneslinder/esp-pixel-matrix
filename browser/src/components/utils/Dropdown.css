@@ -18,6 +18,7 @@
 		cursor: pointer;
 		display: flex;
 		justify-content: space-between;
+		border-radius: 5px;
 
 		.svg-icon svg {
 			width: 12px;
