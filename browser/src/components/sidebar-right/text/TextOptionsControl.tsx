@@ -12,6 +12,7 @@ import {
   TextOptions,
 } from "../../../state/appState";
 import { NumberInput } from "./NumberInput";
+import { useState } from "preact/compat";
 
 const getTextAlignItems = (): { [key: string]: TextAlign } => ({
   Left: TextAlign.LEFT,
@@ -33,6 +34,8 @@ interface TextOptionsControlProps {
 
 export const TextOptionsControl = view(
   ({ settings }: TextOptionsControlProps) => {
+    const [colorpickerOpen, setColorpickerOpen] = useState(false);
+
     const onTextChange = (text: string) => {
       const newSettings = { ...settings, text };
       updateTextItem(newSettings);
@@ -68,6 +71,7 @@ export const TextOptionsControl = view(
     };
 
     const onColorChange = (color: string) => {
+      setColorpickerOpen(true);
       clearTimeout(colorChangeTimeout);
       colorChangeTimeout = setTimeout(() => {
         const newSettings = { ...settings, color };
@@ -185,6 +189,7 @@ export const TextOptionsControl = view(
           <Expandable
             expandedClassName="p-0"
             arrow={false}
+            initialOpen={colorpickerOpen}
             collapsedContent={
               <div className="flex justify-between">
                 <div className="">Color</div>
