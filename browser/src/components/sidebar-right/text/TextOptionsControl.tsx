@@ -1,11 +1,10 @@
 import { view } from "@risingstack/react-easy-state";
 import { HexColorPicker } from "react-colorful";
 import { setTextAction } from "../../../Actions";
-import { limitNumberBetween } from "../../../utils/utils";
+import { clampValue } from "../../../utils/utils";
 import { Expandable } from "../../utils/Expandable";
 
 import { MessageCircleQuestionMark } from "lucide-react";
-import { DropdownItem, Dropdown } from "../../utils/Dropdown";
 import {
   appState,
   Font,
@@ -30,24 +29,23 @@ const COLORPICKER_TIMEOUT_MS = 350;
 
 interface TextOptionsControlProps {
   settings: TextOptions;
-  onResize?: () => void;
 }
 
 export const TextOptionsControl = view(
-  ({ settings, onResize }: TextOptionsControlProps) => {
+  ({ settings }: TextOptionsControlProps) => {
     const onTextChange = (text: string) => {
       const newSettings = { ...settings, text };
       updateTextItem(newSettings);
     };
 
     const onXOffsetChange = (offset: number) => {
-      const offsetX = limitNumberBetween(offset, -20, 20);
+      const offsetX = clampValue(offset, -20, 20);
       const newSettings = { ...settings, offsetX };
       updateTextItem(newSettings);
     };
 
     const onYOffsetChange = (offset: number) => {
-      const offsetY = limitNumberBetween(offset, -20, 20);
+      const offsetY = clampValue(offset, -20, 20);
       const newSettings = { ...settings, offsetY };
       updateTextItem(newSettings);
     };
@@ -91,13 +89,7 @@ export const TextOptionsControl = view(
       }
     };
 
-    const updateHeightOnAnimationEnd = () => {
-      setTimeout(() => {
-        onResize();
-      }, COLORPICKER_TIMEOUT_MS);
-    };
-
-    const clorpickerPreview = (
+    const colorpickerPreview = (
       <div
         className="w-10 h-5 mr-0 rounded-md transition-[margin] duration-[600ms] color-picker-preview"
         style={{ background: settings.color }}
@@ -191,17 +183,22 @@ export const TextOptionsControl = view(
         </div>
         <div className="flex items-center pb-5">
           <Expandable
-            title="Color"
-            initialOpen={false}
-            titleElement={clorpickerPreview}
-            onExpand={updateHeightOnAnimationEnd}
-          >
-            <HexColorPicker
-              className="p-5"
-              color={settings.color}
-              onChange={(color) => onColorChange(color)}
-            />
-          </Expandable>
+            expandedClassName="p-0"
+            arrow={false}
+            collapsedContent={
+              <div className="flex justify-between">
+                <div className="">Color</div>
+                <div>{colorpickerPreview}</div>
+              </div>
+            }
+            expandedContent={
+              <HexColorPicker
+                className="p-5"
+                color={settings.color}
+                onChange={(color) => onColorChange(color)}
+              />
+            }
+          />
         </div>
         <div className="flex justify-end mb-5 -mt-[30px]">
           <button

@@ -1,17 +1,25 @@
-import React, { DragEvent, FormEvent } from "react";
+import React, { DragEvent, FormEvent, JSX } from "react";
 import { view } from "@risingstack/react-easy-state";
 
 import { ImagePlus } from "lucide-react";
 
-interface Props {
+interface FilePickerProps {
   onFileDroppedOrSelected: (file: File) => void;
   isFileTypeAllowed: (mimeType: string) => boolean;
   label: string;
   progress?: number;
+  icon?: JSX.Element;
 }
 
-export const FilePicker: React.FC<Props> = view(
-  ({ onFileDroppedOrSelected, isFileTypeAllowed, label, progress }) => {
+export const FilePicker = view(
+  ({
+    onFileDroppedOrSelected,
+    isFileTypeAllowed,
+    label,
+    progress,
+    icon,
+  }: FilePickerProps) => {
+    const uploadRef = React.useRef<HTMLInputElement>(null);
     const onImageSelected = (evt: FormEvent<HTMLDivElement>) => {
       const target = (evt.target as HTMLInputElement)!;
 
@@ -48,7 +56,7 @@ export const FilePicker: React.FC<Props> = view(
     const renderInputHint = () => (
       <>
         <div className="p-5">
-          <ImagePlus title="Select image" />
+          {icon ? icon : <ImagePlus title="Select image" />}
         </div>
         <div className="text-xs">{label}</div>
         <div className="text-xs">or</div>
@@ -57,12 +65,18 @@ export const FilePicker: React.FC<Props> = view(
             htmlFor="upload-input"
             className="cursor-pointer p-2 mt-2 block"
           >
-            <span>Choose a file</span>
+            <button
+              className="btn btn-xs btn-soft"
+              onClick={() => uploadRef.current?.click()}
+            >
+              Choose a file
+            </button>
           </label>
           <input
             id="upload-input"
             className="hidden"
             type="file"
+            ref={uploadRef}
             onChange={onImageSelected}
           />
         </div>

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { config } from "../../../config";
-import { Loader } from "./Loader";
 
 const localVersion = (window as any).version;
 interface Props {}
@@ -65,7 +64,7 @@ export const VersionChecker: React.FC<Props> = () => {
       {!newVersionAvailable && <div>{`version ${versionNumber}`}</div>}
       {!didUpdateCheck && (
         <div className="w-2.5 h-2.5 border ml-2.5">
-          <Loader />
+          <span className="loading loading-spinner loading-md"></span>
         </div>
       )}
     </div>

@@ -2,13 +2,13 @@ import { view } from "@risingstack/react-easy-state";
 import React, { useEffect } from "react";
 import { FirmwareUpdateForm } from "./FirmwareUpdateForm";
 import { BrightnessSlider } from "./BrightnessSlider";
-import { Expandable } from "../../utils/Expandable";
 import { SaveLoad } from "./SaveLoad";
 import { Canvas } from "../../canvas/Canvas";
 import { getPixelsAction, getStateAction, resetAction } from "../../../Actions";
 import { getSocket, IncommingMessageType } from "../../../Websocket";
 import { StateFromRemote } from "../../../utils/storage";
 import { appState } from "../../../state/appState";
+import { Expandable } from "../../utils/Expandable";
 
 interface Props {
   getCanvas: () => Canvas;
@@ -49,12 +49,11 @@ export const SidebarSettings: React.FC<Props> = view(({ getCanvas }) => {
     <div className="mx-5">
       <BrightnessSlider />
       <Expandable
-        title="Firmware update"
-        className="border-b border-gray-700"
+        expandedClassName="p-0"
+        collapsedContent={<div>Firmware Update</div>}
+        expandedContent={<FirmwareUpdateForm />}
         initialOpen={false}
-      >
-        <FirmwareUpdateForm />
-      </Expandable>
+      />
       <SaveLoad getCanvas={getCanvas} />
       <button
         className="cursor-pointer bg-[--color-dark-1] text-[--color-gray-1] px-2.5 py-2.5 mt-2.5 block border-none rounded-md w-full"

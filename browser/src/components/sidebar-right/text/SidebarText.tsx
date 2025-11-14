@@ -12,8 +12,6 @@ import { Expandable } from "../../utils/Expandable";
 import { Blend, CirclePlus } from "lucide-react";
 
 export const SidebarText = view(() => {
-  const expandableRefs = useRef({} as any);
-
   const setCompositionMode = () => {
     const currentMode = appState.settings.compositionMode;
     let newMode = currentMode + 1;
@@ -23,16 +21,11 @@ export const SidebarText = view(() => {
   const renderTextSettings = () => {
     return appState.text.map((text, i) => (
       <Expandable
-        title={`Text Line ${i + 1}`}
         initialOpen={true}
+        collapsedContent={<div>Text Line {i + 1}</div>}
+        expandedContent={<TextOptionsControl settings={text} />}
         key={`${i}-${text.line}`}
-        ref={(ref: any) => (expandableRefs.current[i] = ref)}
-      >
-        <TextOptionsControl
-          settings={text}
-          onResize={() => expandableRefs.current[i].updateHeight()}
-        />
-      </Expandable>
+      />
     ));
   };
 

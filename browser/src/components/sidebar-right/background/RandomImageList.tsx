@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { Loader } from "../../utils/Loader";
 import {
   getApiKeyFromLocalStorage,
   saveApiKeyToLocalStorage,
@@ -19,7 +18,6 @@ interface UnsplashImage {
   userUrl: string;
 }
 
-let img1;
 export const RandomImageList: React.FC<Props> = ({ imageSelected }) => {
   const [images, setImages] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -37,7 +35,6 @@ export const RandomImageList: React.FC<Props> = ({ imageSelected }) => {
 
   useEffect(() => {
     if (apiKey) {
-      console.log("load images");
       loadImages();
     }
   }, [reloadId, apiKey]);
@@ -51,7 +48,6 @@ export const RandomImageList: React.FC<Props> = ({ imageSelected }) => {
       );
       const data = await response.json();
 
-      img1 = data[0];
       const images: UnsplashImage[] = data.map((d: any) => ({
         downloadUrl: d.links.download_location,
         thumbUrl: d.urls.thumb,
@@ -88,10 +84,10 @@ export const RandomImageList: React.FC<Props> = ({ imageSelected }) => {
 
   const renderImageList = () => {
     return (
-      <div className="overflow-scroll flex-shrink flex-grow basis-[200px]">
+      <div className="flex-grow overflow-auto">
         {isLoading && (
-          <div className="w-10 h-10 border-2">
-            <Loader />
+          <div className="flex items-center justify-center">
+            <span className="loading loading-spinner loading-md" />
           </div>
         )}
         <div className="max-h-[550px] grid grid-cols-2 gap-2.5">
@@ -99,10 +95,14 @@ export const RandomImageList: React.FC<Props> = ({ imageSelected }) => {
             images.map((i: UnsplashImage) => (
               <div
                 key={i.downloadUrl}
-                className="w-full h-[100px] bg-cover cursor-pointer"
-                style={{ backgroundImage: `url(${i.thumbUrl})` }}
+                className="w-full h-[100px] bg-cover cursor-pointer relative mx-auto overflow-hidden rounded-md border-1 border-gray-700 hover:border-gray-100"
                 onClick={() => onImageSelected(i)}
-              />
+              >
+                <img
+                  src={i.thumbUrl}
+                  className="w-full h-full object-cover hover:opacity-80w-full h-auto relative z-0 rounded-lg transition-all duration-300 hover:scale-110"
+                />
+              </div>
             ))}
         </div>
       </div>
@@ -113,29 +113,22 @@ export const RandomImageList: React.FC<Props> = ({ imageSelected }) => {
     return (
       <div>
         {apiError && (
-          <div className="text-xs text-[#e06262] mb-2.5">
+          <div className="text-xs text-[#e06262] mb-2">
             The unsplash API returned an error.
           </div>
         )}
         <div>
           Please enter your{" "}
-          <a
-            href="https://unsplash.com/developers"
-            target="_blank"
-            className="text-[--color-blue-1]"
-          >
+          <a href="https://unsplash.com/developers" target="_blank">
             unsplash API key
           </a>
         </div>
         <input
           type="text"
-          className="mt-2.5 w-full bg-[--color-dark-1] text-[--color-gray-1] px-2.5 py-1.5 border-none h-[30px] rounded-md"
+          className="btn btn-sm"
           onChange={(e) => setNewApiKey((e.target as HTMLInputElement).value)}
         />
-        <button
-          className="cursor-pointer bg-[--color-dark-1] text-[--color-gray-1] px-2.5 py-2.5 mt-2.5 block border-none rounded-md"
-          onClick={onApiKeySave}
-        >
+        <button className="btn btn-sm" onClick={onApiKeySave}>
           Set api key
         </button>
       </div>
@@ -143,20 +136,20 @@ export const RandomImageList: React.FC<Props> = ({ imageSelected }) => {
   };
 
   return (
-    <div>
+    <div className="flex flex-col overflow-auto">
       {apiKey && !apiError && (
-        <div className="flex justify-center items-center mb-2.5 text-center text-xs [&>span]:p-2.5 [&>svg]:w-5 [&>svg]:p-2.5 [&>svg]:inline-block [&>svg]:translate-y-[-2px]">
+        <div className="flex justify-center items-center mb-2 text-center text-xs">
           <span>Random Images</span>
           <RefreshCw
             size={16}
             onClick={getNewImages}
-            className="cursor-pointer [&>svg]:stroke-[1px]"
+            className="cursor-pointer ml-2"
           />
         </div>
       )}
       {apiKey && !apiError ? renderImageList() : renderApiInput()}
       {selectedImage && (
-        <div className="hidden text-[--color-gray-1] text-xs mb-2.5 [&>a]:text-[--color-gray-1] [&>a]:px-1.5">
+        <div className="hidden">
           <span>Photo by</span>
           <a
             href={`${selectedImage.userUrl}?utm_source=Led_Clock&utm_medium=referral`}

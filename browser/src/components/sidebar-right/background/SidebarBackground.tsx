@@ -37,7 +37,7 @@ export const SidebarBackground: React.FC<Props> = view(({ getCanvas }) => {
         isFileTypeAllowed={isImage}
         label="Drag and drop image here"
       />
-      <div className="flex flex-grow basis-[200px] flex-col mt-12">
+      <div className="flex flex-grow basis-[200px] flex-col mt-12 overflow-hidden">
         <RandomImageList imageSelected={handleRandomImage} />
       </div>
     </div>

@@ -3,19 +3,23 @@ import { appState } from "../../../state/appState";
 import { setBrightnessAction } from "../../../Actions";
 
 import { SunDim, Sun } from "lucide-react";
+import { clampValue } from "../../../utils/utils";
 
 interface Props {}
 
 export const BrightnessSlider: React.FC<Props> = view(() => {
   const onBrightnessChange = (e) => {
-    setBrightnessAction(parseInt(e.target.value));
+    const value = clampValue(parseInt(e.target.value), 1, 15);
+    setBrightnessAction(value);
   };
 
   return (
     <div className="border-b border-gray-700 pb-5 mb-5">
-      <div className="mb-2.5">Brightness</div>
-      <div className="flex items-center [&>svg]:translate-y-1.5">
-        {appState.settings.brightness > 7 ? <Sun /> : <SunDim />}
+      <div className="mb-2">Brightness</div>
+      <div className="flex items-center">
+        <div className="w-8 flex items-center justify-center">
+          {appState.settings.brightness > 7 ? <Sun /> : <SunDim />}
+        </div>
         <input
           type="range"
           min="1"
@@ -23,7 +27,7 @@ export const BrightnessSlider: React.FC<Props> = view(() => {
           step="1.0"
           value={appState.settings.brightness}
           onChange={onBrightnessChange}
-          className="flex-grow mx-5 my-0"
+          className="range range-sm flex-grow mx-5 my-0"
         />
         <input
           type="number"
@@ -31,7 +35,7 @@ export const BrightnessSlider: React.FC<Props> = view(() => {
           max="15"
           value={appState.settings.brightness}
           onChange={onBrightnessChange}
-          className="bg-[--color-dark-1] text-[--color-gray-1] outline-none border-none p-1.5 w-[30px] h-[30px] text-center rounded-md"
+          className="input bg-gray-900 w-10 text-center"
         />
       </div>
     </div>
