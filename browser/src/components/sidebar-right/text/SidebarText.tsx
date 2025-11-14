@@ -59,7 +59,7 @@ export const SidebarText = view(() => {
   };
 
   return (
-    <div className="mx-5">
+    <div className="mx-5 overflow-auto">
       <div className="mb-5">
         <div className="flex my-5 items-center">
           <div className="flex-grow items-center flex">Blend Mode</div>

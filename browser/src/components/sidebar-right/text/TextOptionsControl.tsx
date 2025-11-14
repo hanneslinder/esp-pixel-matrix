@@ -133,7 +133,7 @@ export const TextOptionsControl = view(
           <div className="flex-grow-0 flex items-center">
             <select
               defaultValue="Font"
-              className="select bg-gray-900 hover:bg-gray-700"
+              className="select bg-gray-900"
               onChange={(e) => onFontChange(e.currentTarget.value)}
             >
               <option>Regular</option>

@@ -5,7 +5,14 @@ import { GradientColorPicker } from "../../utils/GradientColorPicker";
 import { ColorPicker } from "../../utils/ColorPicker";
 import { Tools } from "../SidebarRight";
 import { Canvas } from "../../canvas/Canvas";
-import { Brush, Eraser, PaintBucket, Diameter, CircleX } from "lucide-react";
+import {
+  Brush,
+  Eraser,
+  PaintBucket,
+  Diameter,
+  CircleX,
+  Trash2,
+} from "lucide-react";
 import { clsx } from "clsx";
 
 interface Props {
@@ -30,17 +37,19 @@ export const SidebarDraw: React.FC<Props> = view(({ getCanvas }) => {
     IconComponent: React.FC<React.SVGProps<SVGSVGElement>>
   ) => {
     return (
-      <div
-        onClick={() => (appState.tools.selected = tool)}
-        title={tool}
-        className={clsx(
-          "cursor-pointer p-2 flex items-center justify-center rounded-md ",
-          appState.tools.selected === tool
-            ? "bg-gray-900 !hover:bg-gray-900"
-            : "hover:bg-gray-700"
-        )}
-      >
-        <IconComponent />
+      <div className="tooltip" data-tip={tool}>
+        <div
+          onClick={() => (appState.tools.selected = tool)}
+          title={tool}
+          className={clsx(
+            "cursor-pointer p-2 flex items-center justify-center rounded-md ",
+            appState.tools.selected === tool
+              ? "bg-gray-900 !hover:bg-gray-900"
+              : "hover:bg-gray-700"
+          )}
+        >
+          <IconComponent />
+        </div>
       </div>
     );
   };
@@ -57,12 +66,13 @@ export const SidebarDraw: React.FC<Props> = view(({ getCanvas }) => {
           onClick={() => getCanvas().clear()}
           title="Clear"
         >
-          <CircleX />
+          <Trash2 />
         </div>
       </div>
+      <div className="mt-4 text-center">{appState.tools.selected}</div>
       <div
         className={clsx(
-          "flex justify-center py-12 color-picker",
+          "flex justify-center mt-4 color-picker",
           appState.tools.selected === Tools.ERASER &&
             "opacity-25 pointer-events-none"
         )}
