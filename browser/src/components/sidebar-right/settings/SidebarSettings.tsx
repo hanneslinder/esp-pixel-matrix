@@ -55,18 +55,20 @@ export const SidebarSettings: React.FC<Props> = view(({ getCanvas }) => {
         initialOpen={false}
       />
       <SaveLoad getCanvas={getCanvas} />
-      <button
-        className="cursor-pointer bg-[--color-dark-1] text-[--color-gray-1] px-2.5 py-2.5 mt-2.5 block border-none rounded-md w-full"
-        onClick={() => getRemoteState()}
-      >
-        Sync
-      </button>
-      <button
-        className="cursor-pointer bg-[--color-dark-1] text-[--color-gray-1] px-2.5 py-2.5 mt-2.5 block border-none rounded-md w-full"
-        onClick={() => reset()}
-      >
-        Reset WIFI
-      </button>
+      <div className="flex gap-2">
+        <button
+          className="btn btn-sm btn-outline"
+          onClick={() => getRemoteState()}
+        >
+          Sync
+        </button>
+        <button
+          className="btn btn-sm btn-outline btn-error"
+          onClick={() => reset()}
+        >
+          Reset WIFI
+        </button>
+      </div>
     </div>
   );
 });

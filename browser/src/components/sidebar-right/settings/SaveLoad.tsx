@@ -10,7 +10,7 @@ import {
 } from "../../../utils/storage";
 import { Canvas, PixelData } from "../../canvas/Canvas";
 
-import { Save, CirclePlus, CircleX } from "lucide-react";
+import { Save, CirclePlus, CircleX, ImageUp, Trash2 } from "lucide-react";
 // sample some pixels, should be unique enough
 function getItemKey(item: SavedItem) {
   return (
@@ -58,26 +58,21 @@ export const SaveLoad: React.FC<SavedItemProps> = view(({ getCanvas }) => {
             <input
               placeholder="View Name"
               type="text"
-              className="bg-[--color-dark-1] text-[--color-gray-1] px-2.5 py-1.5 border-none h-10 rounded-md w-full"
+              className="input bg-gray-900"
               value={saveName}
               onChange={(e) =>
                 setSaveName((e.target as HTMLInputElement).value)
               }
             />
           </div>
-          <button
-            className="mt-0 flex items-center cursor-pointer bg-[--color-dark-1] text-[--color-gray-1] px-2.5 py-2.5 border-none rounded-md"
-            onClick={() => save()}
-          >
-            <span className="mr-1.5">Save</span>
+          <button className="btn btn-md btn-primary" onClick={() => save()}>
+            save
           </button>
         </div>
         <div className="flex flex-col">
+          {savedItems.length > 0 && <div className="text-sm">Saved Views</div>}
           {savedItems.map((item) => (
-            <div
-              key={getItemKey(item)}
-              className="flex items-center py-2.5 border-t border-[--color-dark-1]"
-            >
+            <div key={getItemKey(item)} className="flex items-center py-2">
               <div
                 className="w-[100px] whitespace-nowrap w-full overflow-hidden text-ellipsis cursor-pointer"
                 onClick={() => loadItem(item)}
@@ -89,16 +84,18 @@ export const SaveLoad: React.FC<SavedItemProps> = view(({ getCanvas }) => {
                 pixelData={item.pixelData}
                 onClick={() => loadItem(item)}
               />
-              <Save
-                className="mx-1.5 cursor-pointer [&>svg]:stroke-[1px]"
-                title="overwrite"
-                onClick={() => save(item.name, item.id)}
-              />
-              <CircleX
-                className="mx-1.5 cursor-pointer [&>svg]:stroke-[1px]"
-                title="delete"
-                onClick={() => deleteItem(item.id)}
-              />
+              <div className="flex gap-2 ml-auto">
+                <ImageUp
+                  title="overwrite"
+                  className="cursor-pointer"
+                  onClick={() => save(item.name, item.id)}
+                />
+                <Trash2
+                  title="delete"
+                  className="cursor-pointer"
+                  onClick={() => deleteItem(item.id)}
+                />
+              </div>
             </div>
           ))}
         </div>
@@ -135,7 +132,7 @@ class PreviewCanvas extends React.Component<PreviewCanvasProps, {}> {
           this.canvasRef = r;
         }}
         onClick={this.props.onClick}
-        className="border border-[--color-dark-1] mr-5 ml-5 cursor-pointer transition-[border-color] duration-300 hover:border-[--color-gray-1]"
+        className="border border-gray-700 mr-5 ml-5 rounded-md cursor-pointer transition-[border-color] duration-300 hover:border-gray-500"
       />
     );
   }

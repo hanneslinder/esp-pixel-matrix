@@ -29,16 +29,16 @@ export const SidebarDraw: React.FC<Props> = view(({ getCanvas }) => {
     tool: Tools,
     IconComponent: React.FC<React.SVGProps<SVGSVGElement>>
   ) => {
-    const baseClasses = "cursor-pointer p-2 flex items-center justify-center";
-    const selectedClasses =
-      appState.tools.selected === tool
-        ? "bg-gray-900"
-        : "hover:bg-[--color-dark-1]";
     return (
       <div
         onClick={() => (appState.tools.selected = tool)}
         title={tool}
-        className={`${baseClasses} ${selectedClasses}`}
+        className={clsx(
+          "cursor-pointer p-2 flex items-center justify-center rounded-md ",
+          appState.tools.selected === tool
+            ? "bg-gray-900 !hover:bg-gray-900"
+            : "hover:bg-gray-700"
+        )}
       >
         <IconComponent />
       </div>
@@ -47,13 +47,13 @@ export const SidebarDraw: React.FC<Props> = view(({ getCanvas }) => {
 
   return (
     <div>
-      <div className="flex justify-around border-t border-b border-gray-700">
+      <div className="flex justify-around">
         {renderIcon(Tools.BRUSH, Brush)}
         {renderIcon(Tools.ERASER, Eraser)}
         {renderIcon(Tools.FILL, PaintBucket)}
         {renderIcon(Tools.GRADIENT, SprayCan)}
         <div
-          className="cursor-pointer p-2 flex items-center justify-center"
+          className="cursor-pointer p-2 flex items-center justify-center hover:bg-gray-700 rounded-md"
           onClick={() => getCanvas().clear()}
           title="Clear"
         >
@@ -62,7 +62,7 @@ export const SidebarDraw: React.FC<Props> = view(({ getCanvas }) => {
       </div>
       <div
         className={clsx(
-          "flex justify-center py-12 border-b border-gray-700 color-picker",
+          "flex justify-center py-12 color-picker",
           appState.tools.selected === Tools.ERASER &&
             "opacity-25 pointer-events-none"
         )}

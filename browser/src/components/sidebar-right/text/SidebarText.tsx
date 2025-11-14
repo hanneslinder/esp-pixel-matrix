@@ -49,7 +49,10 @@ export const SidebarText = view(() => {
     if (appState.text.length < 5) {
       return (
         <div className="flex justify-center my-5 mb-12">
-          <CirclePlus onClick={addTextItem} className="cursor-pointer" />
+          <button className="btn btn-sm btn-primary" onClick={addTextItem}>
+            <CirclePlus className="mr-2" style={{ strokeWidth: 2 }} size={18} />
+            Add Text
+          </button>
         </div>
       );
     }
