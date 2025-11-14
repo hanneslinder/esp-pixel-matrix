@@ -124,8 +124,8 @@ export class Canvas {
     endY: number
   ) {
     const gradient = this.ctx.createLinearGradient(startX, startY, endX, endY);
-    gradient.addColorStop(0, appState.tools.color);
-    gradient.addColorStop(1, appState.tools.gradientColor1);
+    gradient.addColorStop(0, appState.tools.gradientColor1);
+    gradient.addColorStop(1, appState.tools.gradientColor2);
 
     this.ctx.fillStyle = gradient;
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
