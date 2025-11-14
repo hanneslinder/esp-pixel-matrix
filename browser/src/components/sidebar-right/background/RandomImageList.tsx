@@ -129,11 +129,11 @@ export const RandomImageList: React.FC<Props> = ({ imageSelected }) => {
         </div>
         <input
           type="text"
-          className="mt-2.5 w-full bg-[--color-dark-1] text-[--color-gray-0] px-2.5 py-1.5 border-none h-[30px] rounded-md"
+          className="mt-2.5 w-full bg-[--color-dark-1] text-[--color-gray-1] px-2.5 py-1.5 border-none h-[30px] rounded-md"
           onChange={(e) => setNewApiKey((e.target as HTMLInputElement).value)}
         />
         <button
-          className="cursor-pointer bg-[--color-dark-1] text-[--color-gray-0] px-2.5 py-2.5 mt-2.5 block border-none rounded-md"
+          className="cursor-pointer bg-[--color-dark-1] text-[--color-gray-1] px-2.5 py-2.5 mt-2.5 block border-none rounded-md"
           onClick={onApiKeySave}
         >
           Set api key

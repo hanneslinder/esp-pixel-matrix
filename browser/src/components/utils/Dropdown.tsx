@@ -1,6 +1,7 @@
 import React, { useRef, useState } from "react";
 import { useOnClickOutside } from "../../utils/hooks";
 import { ChevronDown } from "lucide-react";
+import clsx from "clsx";
 
 export interface DropdownItem {
   value: any;
@@ -30,23 +31,23 @@ export const Dropdown: React.FC<Props> = ({ items, selected, onSelect }) => {
   useOnClickOutside(ref, handleClickOutside);
 
   return (
-    <div className="relative w-[100px]" ref={ref}>
+    <div className="relative" ref={ref}>
       <div
-        className="bg-[--color-dark-1] px-2.5 py-1.5 w-[100px] box-border cursor-pointer flex justify-between rounded-md hover:bg-[--color-blue-0] [&>svg]:w-3"
+        className="bg-gray-900 p-2 w-32 cursor-pointer flex justify-between items-center rounded-md hover:bg-gray-700"
         onClick={() => setOpen(!open)}
       >
         <span>{selectedItem.label}</span>
         <ChevronDown />
       </div>
       {open && (
-        <div
-          className="w-[100px] absolute top-[31px] right-0 z-[100] bg-[--color-dark-1]"
-          style={{ height: `${items.length * 30}px` }}
-        >
+        <div className="w-full absolute top-10 right-0 z-[100] bg-gray-900">
           {items.map((item) => (
             <div
               key={item.label}
-              className="px-2.5 py-1.5 cursor-pointer hover:bg-[--color-blue-0]"
+              className={clsx(
+                "p-2 cursor-pointer hover:bg-gray-700",
+                item.value === selected && "font-bold"
+              )}
               onClick={() => handleItemSelected(item)}
             >
               {item.label}

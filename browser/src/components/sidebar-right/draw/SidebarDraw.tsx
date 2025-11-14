@@ -62,7 +62,7 @@ export const SidebarDraw: React.FC<Props> = view(({ getCanvas }) => {
       </div>
       <div
         className={clsx(
-          "flex justify-center py-12 border-b border-[--color-dark-1] color-picker",
+          "flex justify-center py-12 border-b border-gray-700 color-picker",
           appState.tools.selected === Tools.ERASER &&
             "opacity-25 pointer-events-none"
         )}

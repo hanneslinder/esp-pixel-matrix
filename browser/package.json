@@ -17,6 +17,7 @@
 	},
 	"devDependencies": {
 		"@preact/preset-vite": "^2.10.2",
+		"daisyui": "^5.5.3",
 		"eslint": "^9.39.1",
 		"eslint-config-preact": "^2.0.0",
 		"typescript": "^5.9.3",

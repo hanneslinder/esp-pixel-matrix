@@ -1,8 +1,9 @@
 @import "tailwindcss";
+@plugin "daisyui";
 
 @theme {
 	/* Color palette */
-	--color-gray-0: #f1fcff;
+	--color-gray-1: #f1fcff;
 	--color-gray-1: #818aa5;
 	--color-blue-0: #3c4a73;
 	--color-blue-1: #5d8dff;
@@ -34,7 +35,7 @@
 }
 
 /* Custom form elements styling */
-input[type="range"] {
+/* input[type="range"] {
 	background-color: transparent;
 	-webkit-appearance: none;
 }
@@ -69,7 +70,7 @@ input[type="range"]:focus::-webkit-slider-runnable-track {
 
 input[type="number"]::-webkit-inner-spin-button {
 	-webkit-appearance: none;
-}
+} */
 
 progress::-webkit-progress-bar {
 	background: var(--color-dark-0);

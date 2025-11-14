@@ -12,7 +12,7 @@ export const BrightnessSlider: React.FC<Props> = view(() => {
   };
 
   return (
-    <div className="border-b border-[--color-dark-1] pb-5 mb-5">
+    <div className="border-b border-gray-700 pb-5 mb-5">
       <div className="mb-2.5">Brightness</div>
       <div className="flex items-center [&>svg]:translate-y-1.5">
         {appState.settings.brightness > 7 ? <Sun /> : <SunDim />}
@@ -31,7 +31,7 @@ export const BrightnessSlider: React.FC<Props> = view(() => {
           max="15"
           value={appState.settings.brightness}
           onChange={onBrightnessChange}
-          className="bg-[--color-dark-1] text-[--color-gray-0] outline-none border-none p-1.5 w-[30px] h-[30px] text-center rounded-md"
+          className="bg-[--color-dark-1] text-[--color-gray-1] outline-none border-none p-1.5 w-[30px] h-[30px] text-center rounded-md"
         />
       </div>
     </div>

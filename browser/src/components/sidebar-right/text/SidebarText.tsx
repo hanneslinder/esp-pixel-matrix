@@ -11,9 +11,7 @@ import { TextOptionsControl } from "./TextOptionsControl";
 import { Expandable } from "../../utils/Expandable";
 import { Blend, CirclePlus } from "lucide-react";
 
-interface Props {}
-
-export const SidebarText: React.FC<Props> = view(() => {
+export const SidebarText = view(() => {
   const expandableRefs = useRef({} as any);
 
   const setCompositionMode = () => {
@@ -25,7 +23,7 @@ export const SidebarText: React.FC<Props> = view(() => {
   const renderTextSettings = () => {
     return appState.text.map((text, i) => (
       <Expandable
-        title={`Text ${i + 1}`}
+        title={`Text Line ${i + 1}`}
         initialOpen={true}
         key={`${i}-${text.line}`}
         ref={(ref: any) => (expandableRefs.current[i] = ref)}
@@ -58,10 +56,7 @@ export const SidebarText: React.FC<Props> = view(() => {
     if (appState.text.length < 5) {
       return (
         <div className="flex justify-center my-5 mb-12">
-          <CirclePlus
-            onClick={addTextItem}
-            className="cursor-pointer [&>svg]:stroke-[1px]"
-          />
+          <CirclePlus onClick={addTextItem} className="cursor-pointer" />
         </div>
       );
     }
@@ -69,14 +64,11 @@ export const SidebarText: React.FC<Props> = view(() => {
 
   return (
     <div className="mx-5">
-      <div className="border-b border-[--color-dark-1] mb-5">
+      <div className="mb-5">
         <div className="flex my-5 items-center">
           <div className="flex-grow items-center flex">Blend Mode</div>
           <div className="flex-grow-0 flex items-center">
-            <Blend
-              className="cursor-pointer [&>svg]:stroke-[1px]"
-              onClick={setCompositionMode}
-            />
+            <Blend className="cursor-pointer" onClick={setCompositionMode} />
           </div>
         </div>
       </div>
