@@ -69,6 +69,25 @@ export const SidebarDraw: React.FC<Props> = view(({ getCanvas }) => {
       >
         {renderColorPicker()}
       </div>
+      <div>
+        {appState.tools.selected === Tools.BRUSH && (
+          <div className="flex justify-center items-center gap-5">
+            <label htmlFor="brush-size">Brush Size:</label>
+            <input
+              className="range w-32"
+              value={appState.tools.brushSize}
+              onChange={(e) =>
+                (appState.tools.brushSize = parseInt(
+                  (e.target as HTMLInputElement).value
+                ))
+              }
+              type="range"
+              min={1}
+              max={5}
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 });

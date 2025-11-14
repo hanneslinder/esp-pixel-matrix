@@ -23,6 +23,7 @@ export interface AppState {
     color: string;
     gradientColor1: string;
     gradientColor2: string;
+    brushSize?: number;
   };
   settings: Settings;
   customData: CustomDataOptions;
@@ -74,6 +75,7 @@ const getInitialState = (): AppState => ({
     color: "#ffffff",
     gradientColor1: "#2db2eb",
     gradientColor2: "#1d59b9",
+    brushSize: 1,
   },
   matrix: {
     width: 64,
