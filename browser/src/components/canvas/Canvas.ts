@@ -9,7 +9,7 @@ import { rgbToHex } from "../../utils/color";
 import { CanvasGrid } from "./CanvasGrid";
 import { CanvasTextLayer } from "./CanvasTextLayer";
 import { saveView } from "../../utils/storage";
-import { Tools } from "../sidebar-right/SidebarRight";
+import { Tools } from "../views/ViewWrapper";
 
 export interface PixelData {
   p: number[];

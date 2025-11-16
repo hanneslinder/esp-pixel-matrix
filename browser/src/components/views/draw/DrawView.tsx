@@ -3,23 +3,16 @@ import React from "react";
 import { appState } from "../../../state/appState";
 import { GradientColorPicker } from "../../utils/GradientColorPicker";
 import { ColorPicker } from "../../utils/ColorPicker";
-import { Tools } from "../SidebarRight";
+import { Tools } from "../ViewWrapper";
 import { Canvas } from "../../canvas/Canvas";
-import {
-  Brush,
-  Eraser,
-  PaintBucket,
-  Diameter,
-  CircleX,
-  Trash2,
-} from "lucide-react";
+import { Brush, Eraser, PaintBucket, Diameter, Trash2 } from "lucide-react";
 import { clsx } from "clsx";
 
 interface Props {
   getCanvas: () => Canvas;
 }
 
-export const SidebarDraw: React.FC<Props> = view(({ getCanvas }) => {
+export const DrawView: React.FC<Props> = view(({ getCanvas }) => {
   const renderColorPicker = () =>
     appState.tools.selected === Tools.GRADIENT ? (
       <GradientColorPicker

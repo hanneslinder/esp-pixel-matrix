@@ -10,7 +10,7 @@ interface Props {
 
 const isImage = (mimeType: string) => mimeType.startsWith("image/");
 
-export const SidebarBackground: React.FC<Props> = view(({ getCanvas }) => {
+export const BackgroundView: React.FC<Props> = view(({ getCanvas }) => {
   const drawImage = (img: HTMLImageElement) => {
     img.onload = () => {
       const canvas = getCanvas();

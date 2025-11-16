@@ -7,8 +7,8 @@ import {
   CanvasWrapperElement,
 } from "./components/canvas/CanvasWrapper";
 import { Header } from "./components/Header";
-import { SidebarRight } from "./components/sidebar-right/SidebarRight";
-import { SidebarLeft } from "./components/sidebar-left/SidebarLeft";
+import { ViewWrapper } from "./components/views/ViewWrapper";
+import { Navigation } from "./components/Navigation";
 
 import "./index.css";
 
@@ -20,13 +20,13 @@ const App = view(() => {
       <Header />
       <div className="flex justify-between h-[calc(100vh-40px)]">
         <div className="bg-gray-800 max-h-[calc(100vh-40px)] overflow-visible">
-          <SidebarLeft />
+          <Navigation />
         </div>
         <div className="flex-grow flex-shrink overflow-auto flex items-center flex-col justify-center">
           <CanvasWrapper ref={canvasWrapperRef} />
         </div>
         <div className="bg-gray-800 flex-grow-0 basis-[350px] min-w-[280px] max-h-[calc(100vh-40px)] overflow-auto">
-          <SidebarRight getCanvas={() => canvasWrapperRef.current.canvas} />
+          <ViewWrapper getCanvas={() => canvasWrapperRef.current.canvas} />
         </div>
       </div>
     </div>

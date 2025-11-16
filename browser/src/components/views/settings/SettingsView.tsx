@@ -22,7 +22,7 @@ const onRemoteStateReceived = (state: StateFromRemote) => {
   });
 };
 
-export const SidebarSettings: React.FC<Props> = view(({ getCanvas }) => {
+export const SettingsView = view(({ getCanvas }: Props) => {
   let unsubscribeFromStateMessage: () => void;
 
   const getRemoteState = () => {

@@ -1,6 +1,6 @@
 import { store } from "@risingstack/react-easy-state";
-import { SidebarLeftItem } from "../components/sidebar-left/SidebarLeft";
-import { Tools } from "../components/sidebar-right/SidebarRight";
+import { Views } from "../components/Navigation";
+import { Tools } from "../components/views/ViewWrapper";
 import { getSavedItemsFromLocalStorage, SavedItem } from "../utils/storage";
 
 export interface Settings {
@@ -10,9 +10,7 @@ export interface Settings {
 }
 
 export interface AppState {
-  sidebarLeft: {
-    selected: SidebarLeftItem;
-  };
+  view: Views;
   matrix: {
     width: number;
     height: number;
@@ -67,9 +65,7 @@ export interface CustomDataOptions {
 }
 
 const getInitialState = (): AppState => ({
-  sidebarLeft: {
-    selected: SidebarLeftItem.Draw,
-  },
+  view: Views.Draw,
   tools: {
     selected: Tools.BRUSH,
     color: "#ffffff",

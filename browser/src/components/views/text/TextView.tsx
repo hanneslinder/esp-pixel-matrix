@@ -11,7 +11,7 @@ import { TextOptionsControl } from "./TextOptionsControl";
 import { Expandable } from "../../utils/Expandable";
 import { Blend, CirclePlus } from "lucide-react";
 
-export const SidebarText = view(() => {
+export const TextView = view(() => {
   const setCompositionMode = () => {
     const currentMode = appState.settings.compositionMode;
     let newMode = currentMode + 1;

@@ -1,8 +1,8 @@
 import { view } from "@risingstack/react-easy-state";
-import { appState } from "../../state/appState";
+import { appState } from "../state/appState";
 import { Brush, Type, Image, Settings } from "lucide-react";
 
-export const enum SidebarLeftItem {
+export const enum Views {
   Draw = "Draw",
   Text = "Text",
   Background = "Background",
@@ -11,21 +11,20 @@ export const enum SidebarLeftItem {
 
 interface Props {}
 
-export const SidebarLeft = view((props: Props) => {
+export const Navigation = view((props: Props) => {
   const items = [
-    { label: SidebarLeftItem.Draw, icon: <Brush /> },
-    { label: SidebarLeftItem.Text, icon: <Type /> },
-    { label: SidebarLeftItem.Background, icon: <Image /> },
-    { label: SidebarLeftItem.Settings, icon: <Settings /> },
+    { label: Views.Draw, icon: <Brush /> },
+    { label: Views.Text, icon: <Type /> },
+    { label: Views.Background, icon: <Image /> },
+    { label: Views.Settings, icon: <Settings /> },
   ];
 
-  const setItemActive = (item: SidebarLeftItem) =>
-    (appState.sidebarLeft.selected = item);
+  const setItemActive = (item: Views) => (appState.view = item);
 
   return (
     <div className="flex flex-col select-none">
       {items.map((item) => {
-        const isActive = appState.sidebarLeft.selected === item.label;
+        const isActive = appState.view === item.label;
 
         return (
           <div
