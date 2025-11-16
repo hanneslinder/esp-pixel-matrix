@@ -7,15 +7,13 @@ export interface Settings {
   brightness: number;
   compositionMode: number;
   locale: string;
+  width: number;
+  height: number;
+  pixelRatio: number;
 }
 
 export interface AppState {
   view: Views;
-  matrix: {
-    width: number;
-    height: number;
-    pixelRatio: number;
-  };
   tools: {
     selected: Tools;
     color: string;
@@ -73,11 +71,6 @@ const getInitialState = (): AppState => ({
     gradientColor2: "#1d59b9",
     brushSize: 1,
   },
-  matrix: {
-    width: 64,
-    height: 32,
-    pixelRatio: 10,
-  },
   connection: {
     isSending: false,
     isReceiving: false,
@@ -110,6 +103,9 @@ const getInitialState = (): AppState => ({
     compositionMode: 0,
     brightness: 2,
     locale: "en_US.UTF-8",
+    width: 64,
+    height: 32,
+    pixelRatio: 10,
   },
   customData: {
     updateInterval: -1,

@@ -10,7 +10,7 @@ import {
 } from "../../../utils/storage";
 import { Canvas, PixelData } from "../../canvas/Canvas";
 
-import { Save, CirclePlus, CircleX, ImageUp, Trash2 } from "lucide-react";
+import { ImageUp, Trash2 } from "lucide-react";
 // sample some pixels, should be unique enough
 function getItemKey(item: SavedItem) {
   return (
@@ -115,8 +115,8 @@ class PreviewCanvas extends React.Component<PreviewCanvasProps, {}> {
 
   componentDidMount() {
     this.ctx = this.canvasRef.getContext("2d");
-    this.canvasRef.width = appState.matrix.width;
-    this.canvasRef.height = appState.matrix.height;
+    this.canvasRef.width = appState.settings.width;
+    this.canvasRef.height = appState.settings.height;
     this.props.pixelData.forEach((p) => this.drawPixel(p.p[0], p.p[1], p.c));
   }
 

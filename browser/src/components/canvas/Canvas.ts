@@ -35,8 +35,9 @@ export class Canvas {
     container.appendChild(this.canvas);
 
     this.ctx = this.canvas.getContext("2d");
-    this.canvas.width = appState.matrix.width * appState.matrix.pixelRatio;
-    this.canvas.height = appState.matrix.height * appState.matrix.pixelRatio;
+    this.canvas.width = appState.settings.width * appState.settings.pixelRatio;
+    this.canvas.height =
+      appState.settings.height * appState.settings.pixelRatio;
     this.textLayer = new CanvasTextLayer(container);
     this.grid = new CanvasGrid(container);
 
@@ -76,8 +77,8 @@ export class Canvas {
     const { x, y } = this.getCoords(evt.clientX, evt.clientY);
 
     if (
-      Math.floor(x / appState.matrix.pixelRatio) !== this.lastX ||
-      Math.floor(y / appState.matrix.pixelRatio) !== this.lastY
+      Math.floor(x / appState.settings.pixelRatio) !== this.lastX ||
+      Math.floor(y / appState.settings.pixelRatio) !== this.lastY
     ) {
       this.useToolAt(x, y);
 
@@ -87,8 +88,8 @@ export class Canvas {
       // }
     }
 
-    this.lastX = Math.floor(x / appState.matrix.pixelRatio);
-    this.lastY = Math.floor(y / appState.matrix.pixelRatio);
+    this.lastX = Math.floor(x / appState.settings.pixelRatio);
+    this.lastY = Math.floor(y / appState.settings.pixelRatio);
   };
 
   private getCoords(clientX: number, clientY: number) {
@@ -147,20 +148,22 @@ export class Canvas {
     sendToMatrix = true
   ): void {
     const xFrom =
-      Math.floor(x / appState.matrix.pixelRatio) * appState.matrix.pixelRatio;
+      Math.floor(x / appState.settings.pixelRatio) *
+      appState.settings.pixelRatio;
     const yFrom =
-      Math.floor(y / appState.matrix.pixelRatio) * appState.matrix.pixelRatio;
+      Math.floor(y / appState.settings.pixelRatio) *
+      appState.settings.pixelRatio;
     const fillColor = colorParam || appState.tools.color;
 
     this.ctx.fillStyle = fillColor;
-    const offset = (appState.matrix.pixelRatio - 10 * size) / 2;
+    const offset = (appState.settings.pixelRatio - 10 * size) / 2;
     this.ctx.fillRect(xFrom + offset, yFrom + offset, 10 * size, 10 * size);
 
     if (sendToMatrix) {
       const pixelToSend: PixelData = {
         p: [
-          Math.floor(xFrom / appState.matrix.pixelRatio),
-          Math.floor(yFrom / appState.matrix.pixelRatio),
+          Math.floor(xFrom / appState.settings.pixelRatio),
+          Math.floor(yFrom / appState.settings.pixelRatio),
         ],
         c: fillColor,
       };
@@ -184,10 +187,10 @@ export class Canvas {
       this.canvas.height
     );
     const oneRowLength = 4 * this.canvas.width;
-    const jumpOnePixel = 4 * appState.matrix.pixelRatio;
+    const jumpOnePixel = 4 * appState.settings.pixelRatio;
     const jumpToNextRow =
-      oneRowLength * (appState.matrix.pixelRatio - 1) +
-      4 * appState.matrix.pixelRatio;
+      oneRowLength * (appState.settings.pixelRatio - 1) +
+      4 * appState.settings.pixelRatio;
 
     let x = 0;
     let y = 0;
@@ -205,7 +208,7 @@ export class Canvas {
 
       x++;
 
-      if (x % appState.matrix.width === 0) {
+      if (x % appState.settings.width === 0) {
         y++;
         x = 0;
         increment = jumpToNextRow;
@@ -236,15 +239,15 @@ export class Canvas {
       img,
       0,
       0,
-      appState.matrix.width,
-      appState.matrix.height
+      appState.settings.width,
+      appState.settings.height
     );
 
     const imgData = this.ctx.getImageData(
       0,
       0,
-      appState.matrix.width,
-      appState.matrix.height
+      appState.settings.width,
+      appState.settings.height
     );
     const data = imgData.data;
 
@@ -264,7 +267,7 @@ export class Canvas {
 
       x++;
 
-      if (x % appState.matrix.width === 0) {
+      if (x % appState.settings.width === 0) {
         y++;
         x = 0;
       }

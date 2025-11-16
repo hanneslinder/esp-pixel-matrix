@@ -6,56 +6,70 @@ import * as DefaultTextRenderer from "./TextRenderer";
 import * as V2TextRenderer from "./TextRendererV2";
 
 export class CanvasTextLayer {
-	private ctx: CanvasRenderingContext2D;
-	private canvas: HTMLCanvasElement;
-	private updateTimeInterval: any;
+  private ctx: CanvasRenderingContext2D;
+  private canvas: HTMLCanvasElement;
+  private updateTimeInterval: any;
 
-	constructor(container: HTMLElement) {
-		this.canvas = document.createElement("canvas");
-		this.canvas.setAttribute("id", "canvas-text-layer");
-		this.ctx = this.canvas.getContext("2d");
+  constructor(container: HTMLElement) {
+    this.canvas = document.createElement("canvas");
+    this.canvas.setAttribute("id", "canvas-text-layer");
+    this.ctx = this.canvas.getContext("2d");
 
-		this.canvas.width = appState.matrix.width * appState.matrix.pixelRatio;
-		this.canvas.height = appState.matrix.height * appState.matrix.pixelRatio;
-		this.ctx.translate(0.5, 0.5);
+    this.canvas.width = appState.settings.width * appState.settings.pixelRatio;
+    this.canvas.height =
+      appState.settings.height * appState.settings.pixelRatio;
+    this.ctx.translate(0.5, 0.5);
 
-		container.appendChild(this.canvas);
+    container.appendChild(this.canvas);
 
-		this.observeChanges();
-	}
+    this.observeChanges();
+  }
 
-	private observeChanges() {
-		observe(() => {
-			this.reset();
-			clearInterval(this.updateTimeInterval);
-			this.updateText();
-			// this.updateTimeInterval = setInterval(this.updateTime, 1000);
-		});
-	}
+  private observeChanges() {
+    observe(() => {
+      this.reset();
+      clearInterval(this.updateTimeInterval);
+      this.updateText();
+      // this.updateTimeInterval = setInterval(this.updateTime, 1000);
+    });
+  }
 
-	private readonly updateText = () => {
-		this.reset();
+  private readonly updateText = () => {
+    this.reset();
 
-		appState.text.forEach((text) => {
-			const renderFunction = text.font === Font.REGULAR ? DefaultTextRenderer.renderText : V2TextRenderer.renderText;
-			const widthFunction = text.font === Font.REGULAR ? DefaultTextRenderer.getWidth : V2TextRenderer.getWidth;
-			
-			const value = strftime(text.text, new Date());
-			const width = widthFunction(value, text.size);
-			const yVal = text.line === 1 ? 5 : 23;
+    appState.text.forEach((text) => {
+      const renderFunction =
+        text.font === Font.REGULAR
+          ? DefaultTextRenderer.renderText
+          : V2TextRenderer.renderText;
+      const widthFunction =
+        text.font === Font.REGULAR
+          ? DefaultTextRenderer.getWidth
+          : V2TextRenderer.getWidth;
 
-			let xVal = 0;
-			if (text.align === TextAlign.CENTER) {
-				xVal = (appState.matrix.width - width) / 2;
-			} else if (text.align === TextAlign.RIGHT) {
-				xVal = appState.matrix.width - width;
-			}
+      const value = strftime(text.text, new Date());
+      const width = widthFunction(value, text.size);
+      const yVal = text.line === 1 ? 5 : 23;
 
-			renderFunction(this.ctx, value, text.color, Math.round(xVal + text.offsetX), Math.round(yVal + text.offsetY), text.size);
-		});
-	};
+      let xVal = 0;
+      if (text.align === TextAlign.CENTER) {
+        xVal = (appState.settings.width - width) / 2;
+      } else if (text.align === TextAlign.RIGHT) {
+        xVal = appState.settings.width - width;
+      }
 
-	private reset(): void {
-		this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-	}
+      renderFunction(
+        this.ctx,
+        value,
+        text.color,
+        Math.round(xVal + text.offsetX),
+        Math.round(yVal + text.offsetY),
+        text.size
+      );
+    });
+  };
+
+  private reset(): void {
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+  }
 }

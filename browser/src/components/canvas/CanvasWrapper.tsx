@@ -34,7 +34,7 @@ export class CanvasWrapperElement extends React.Component<
       appState.connection.isReceiving = true;
     }
 
-    if (data["line-end"] === appState.matrix.height) {
+    if (data["line-end"] === appState.settings.height) {
       appState.connection.isReceiving = false;
     }
 
