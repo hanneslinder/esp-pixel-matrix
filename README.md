@@ -1,10 +1,13 @@
 # ESP-32 Pixel Matrix
 
+![5825789564553989131](https://github.com/user-attachments/assets/828f638a-ecb2-4d48-9f33-1b184bb0b7b3)
+
 ![20220120_125157](https://user-images.githubusercontent.com/3353071/167358525-23218d44-c39b-4bd0-a9f9-8234161531a9.jpeg)
 
 ![20220120_125402](https://github.com/hanneslinder/esp-pixel-matrix/assets/3353071/07281c88-0f26-4d58-a8c8-36cdf4d6948d)
 
-![2022-05-09_09-10](https://user-images.githubusercontent.com/3353071/167358409-bda87fc2-24e8-4b76-ae95-3840c33580ec.png)
+<img width="3116" height="1494" alt="screenshot" src="https://github.com/user-attachments/assets/c5acb27d-3c9e-4b07-99b7-09668173fe82" />
+
 
 ## Setup
 
