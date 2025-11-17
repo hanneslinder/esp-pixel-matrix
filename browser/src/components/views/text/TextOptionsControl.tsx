@@ -14,17 +14,6 @@ import {
 import { NumberInput } from "./NumberInput";
 import { useState } from "preact/compat";
 
-const getTextAlignItems = (): { [key: string]: TextAlign } => ({
-  Left: TextAlign.LEFT,
-  Center: TextAlign.CENTER,
-  Right: TextAlign.RIGHT,
-});
-
-const getFontMap = (): { [key: string]: Font } => ({
-  Regular: Font.REGULAR,
-  Pico: Font.PICO,
-});
-
 let colorChangeTimeout: ReturnType<typeof setTimeout>;
 const COLORPICKER_TIMEOUT_MS = 350;
 
@@ -58,14 +47,12 @@ export const TextOptionsControl = view(
       updateTextItem(newSettings);
     };
 
-    const onFontChange = (fontName: string) => {
-      const font = getFontMap()[fontName];
+    const onFontChange = (font: Font) => {
       const newSettings = { ...settings, font };
       updateTextItem(newSettings);
     };
 
-    const onAlignChange = (alignName: string) => {
-      const align = getTextAlignItems()[alignName];
+    const onAlignChange = (align: TextAlign) => {
       const newSettings = { ...settings, align };
       updateTextItem(newSettings);
     };
@@ -132,12 +119,12 @@ export const TextOptionsControl = view(
           <div className="flex-grow items-center flex">Font</div>
           <div className="flex-grow-0 flex items-center">
             <select
-              defaultValue="Font"
+              defaultValue={Font.REGULAR}
               className="select bg-gray-900"
-              onChange={(e) => onFontChange(e.currentTarget.value)}
+              onChange={(e) => onFontChange(parseInt(e.currentTarget.value))}
             >
-              <option>Regular</option>
-              <option>Pico</option>
+              <option value={Font.REGULAR}>Regular</option>
+              <option value={Font.PICO}>Pico</option>
             </select>
           </div>
         </div>
@@ -155,13 +142,13 @@ export const TextOptionsControl = view(
           <div className="flex-grow items-center flex">Align</div>
           <div className="flex-grow-0 flex items-center">
             <select
-              defaultValue="Text Align"
+              defaultValue={TextAlign.CENTER}
               className="select bg-gray-900"
-              onChange={(e) => onAlignChange(e.currentTarget.value)}
+              onChange={(e) => onAlignChange(parseInt(e.currentTarget.value))}
             >
-              <option>Left</option>
-              <option>Center</option>
-              <option>Right</option>
+              <option value={TextAlign.LEFT}>Left</option>
+              <option value={TextAlign.CENTER}>Center</option>
+              <option value={TextAlign.RIGHT}>Right</option>
             </select>
           </div>
         </div>

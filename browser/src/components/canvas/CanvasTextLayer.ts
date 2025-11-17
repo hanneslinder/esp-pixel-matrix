@@ -8,7 +8,7 @@ import * as V2TextRenderer from "./TextRendererV2";
 export class CanvasTextLayer {
   private ctx: CanvasRenderingContext2D;
   private canvas: HTMLCanvasElement;
-  private updateTimeInterval: any;
+  private updateTimeInterval: number;
 
   constructor(container: HTMLElement) {
     this.canvas = document.createElement("canvas");
@@ -30,7 +30,7 @@ export class CanvasTextLayer {
       this.reset();
       clearInterval(this.updateTimeInterval);
       this.updateText();
-      // this.updateTimeInterval = setInterval(this.updateTime, 1000);
+      this.updateTimeInterval = setInterval(this.updateText, 1000);
     });
   }
 

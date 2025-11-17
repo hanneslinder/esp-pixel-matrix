@@ -50,7 +50,7 @@ boolean forceUpdateTime = false;
 char currentTimezone[64];
 
 TextItem textContent[5]
-    = { { "%H:%M", 0xFFFF, 1, -3, 1, 2, 1 }, { "%d.%b", 0xFFFF, 3, -1, 1, 1, 2 } };
+    = { { "%H:%M", 0xFFFF, -1, -5, 1, 2, 1 }, { "%d.%b", 0xFFFF, 2, -3, 1, 1, 2 } };
 
 char* socketData;
 int currSocketBufferIndex = 0;
