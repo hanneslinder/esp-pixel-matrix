@@ -1,55 +1,60 @@
 import React, { useRef, useState } from "react";
 import { useOnClickOutside } from "../../utils/hooks";
-
-import "./Dropdown.less";
-import { SvgIcon } from "./SvgIcon";
-
-const iconChevron = require("../../assets/chevron-down.svg");
+import { ChevronDown } from "lucide-react";
+import clsx from "clsx";
 
 export interface DropdownItem {
-	value: any;
-	label: string;
+  value: any;
+  label: string;
 }
 
 interface Props {
-	items: DropdownItem[];
-	selected: any;
-	onSelect: (selected: any) => void;
+  items: DropdownItem[];
+  selected: any;
+  onSelect: (selected: any) => void;
 }
 
 export const Dropdown: React.FC<Props> = ({ items, selected, onSelect }) => {
-	const [open, setOpen] = useState(false);
-	const ref = useRef(null);
-	const selectedItem = items.find((i) => i.value === selected);
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  const selectedItem = items.find((i) => i.value === selected);
 
-	const handleClickOutside = () => {
-		setOpen(false);
-	};
+  const handleClickOutside = () => {
+    setOpen(false);
+  };
 
-	const handleItemSelected = (item: DropdownItem) => {
-		setOpen(false);
-		onSelect(item.value);
-	};
+  const handleItemSelected = (item: DropdownItem) => {
+    setOpen(false);
+    onSelect(item.value);
+  };
 
-	useOnClickOutside(ref, handleClickOutside);
+  useOnClickOutside(ref, handleClickOutside);
 
-	return (
-		<div className={`dropdown ${open ? "is-open" : ""}`} ref={ref}>
-			<div className="dropdown-selected" onClick={() => setOpen(!open)}>
-				<span>{selectedItem.label}</span>
-				<SvgIcon icon={iconChevron} />
-			</div>
-			<div className="dropdown-list" style={{ height: `${items.length * 30}px` }}>
-				{items.map((item) => (
-					<div
-						key={item.label}
-						className={`dropdown-item ${item === selectedItem ? "is-selected" : ""}`}
-						onClick={() => handleItemSelected(item)}
-					>
-						{item.label}
-					</div>
-				))}
-			</div>
-		</div>
-	);
+  return (
+    <div className="relative" ref={ref}>
+      <div
+        className="bg-gray-900 p-2 w-32 cursor-pointer flex justify-between items-center rounded-md hover:bg-gray-700"
+        onClick={() => setOpen(!open)}
+      >
+        <span>{selectedItem.label}</span>
+        <ChevronDown />
+      </div>
+      {open && (
+        <div className="w-full absolute top-10 right-0 z-[100] bg-gray-900">
+          {items.map((item) => (
+            <div
+              key={item.label}
+              className={clsx(
+                "p-2 cursor-pointer hover:bg-gray-700",
+                item.value === selected && "font-bold"
+              )}
+              onClick={() => handleItemSelected(item)}
+            >
+              {item.label}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 };

@@ -1,88 +1,118 @@
-import React, { DragEvent, FormEvent } from "react";
+import React, { DragEvent, FormEvent, JSX } from "react";
 import { view } from "@risingstack/react-easy-state";
-import { SvgIcon } from "./SvgIcon";
 
-import "./FilePicker.less";
+import { ImagePlus } from "lucide-react";
 
-const iconAddFile = require("../../assets/cloud-plus.svg");
-
-interface Props {
-	onFileDroppedOrSelected: (file: File) => void;
-	isFileTypeAllowed: (mimeType: string) => boolean;
-	label: string;
-	progress?: number;
+interface FilePickerProps {
+  onFileDroppedOrSelected: (file: File) => void;
+  isFileTypeAllowed: (mimeType: string) => boolean;
+  label: string;
+  progress?: number;
+  icon?: JSX.Element;
 }
 
-export const FilePicker: React.FC<Props> = view(({ onFileDroppedOrSelected, isFileTypeAllowed, label, progress }) => {
-	const onImageSelected = (evt: FormEvent<HTMLDivElement>) => {
-		const target = (evt.target as HTMLInputElement)!;
+export const FilePicker = view(
+  ({
+    onFileDroppedOrSelected,
+    isFileTypeAllowed,
+    label,
+    progress,
+    icon,
+  }: FilePickerProps) => {
+    const uploadRef = React.useRef<HTMLInputElement>(null);
+    const onImageSelected = (evt: FormEvent<HTMLDivElement>) => {
+      const target = (evt.target as HTMLInputElement)!;
 
-		if (target && target.files && target.files.length > 0 && isFileTypeAllowed(target.files[0].type)) {
-			onFileDroppedOrSelected(target.files[0]);
-		}
-	};
+      if (
+        target &&
+        target.files &&
+        target.files.length > 0 &&
+        isFileTypeAllowed(target.files[0].type)
+      ) {
+        onFileDroppedOrSelected(target.files[0]);
+      }
+    };
 
-	const handleDragEnter = (e: DragEvent<HTMLDivElement>) => {
-		e.preventDefault();
-	};
+    const handleDragEnter = (e: DragEvent<HTMLDivElement>) => {
+      e.preventDefault();
+    };
 
-	const handleDragLeave = (e: DragEvent<HTMLDivElement>) => {
-		e.preventDefault();
-	};
+    const handleDragLeave = (e: DragEvent<HTMLDivElement>) => {
+      e.preventDefault();
+    };
 
-	const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
-		e.preventDefault();
-	};
+    const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
+      e.preventDefault();
+    };
 
-	const handleDrop = (e: DragEvent<HTMLDivElement>) => {
-		e.preventDefault();
+    const handleDrop = (e: DragEvent<HTMLDivElement>) => {
+      e.preventDefault();
 
-		if (isFileTypeAllowed(e.dataTransfer.files[0].type)) {
-			onFileDroppedOrSelected(e.dataTransfer.files[0]);
-		}
-	};
+      if (isFileTypeAllowed(e.dataTransfer.files[0].type)) {
+        onFileDroppedOrSelected(e.dataTransfer.files[0]);
+      }
+    };
 
-	const renderInputHint = () => (
-		<>
-			<SvgIcon icon={iconAddFile} title="Select image" />
-			<div className="sub-header">{label}</div>
-			<div>or</div>
-			<div className="file-picker">
-				<label htmlFor="upload-input" className="file-picker-label">
-					<span className="background-file-button">Chose a file</span>
-				</label>
-				<input id="upload-input" className="file-picker-input" type="file" onChange={onImageSelected} />
-			</div>
-		</>
-	);
+    const renderInputHint = () => (
+      <>
+        <div className="p-5">
+          {icon ? icon : <ImagePlus title="Select image" />}
+        </div>
+        <div className="text-xs">{label}</div>
+        <div className="text-xs">or</div>
+        <div>
+          <label
+            htmlFor="upload-input"
+            className="cursor-pointer p-2 mt-2 block"
+          >
+            <button
+              className="btn btn-xs btn-soft"
+              onClick={() => uploadRef.current?.click()}
+            >
+              Choose a file
+            </button>
+          </label>
+          <input
+            id="upload-input"
+            className="hidden"
+            type="file"
+            ref={uploadRef}
+            onChange={onImageSelected}
+          />
+        </div>
+      </>
+    );
 
-	const renderProgress = () => (
-		<div className="update-progress">
-			{progress < 100 ? (
-				<>
-					<div>Updating Firmware</div>
-					<div>Don't leave page util finished!</div>
-					<progress max="100" value={progress} />
-					<div>{`${progress}%`}</div>
-				</>
-			) : (
-				<div>
-					<div>Firmware update done!</div>
-					<div>Page will reload in 5s.</div>
-				</div>
-			)}
-		</div>
-	);
+    const renderProgress = () => (
+      <div className="text-center">
+        {progress < 100 ? (
+          <>
+            <div>Updating Firmware</div>
+            <div>Don't leave page until finished!</div>
+            <progress max="100" value={progress} className="mt-5" />
+            <div>{`${progress}%`}</div>
+          </>
+        ) : (
+          <div>
+            <div>Firmware update done!</div>
+            <div>Page will reload in 5s.</div>
+          </div>
+        )}
+      </div>
+    );
 
-	return (
-		<div
-			className={`background-file-picker ${progress ? "is-uploading" : ""}`}
-			onDrop={(e) => handleDrop(e)}
-			onDragOver={(e) => handleDragOver(e)}
-			onDragEnter={(e) => handleDragEnter(e)}
-			onDragLeave={(e) => handleDragLeave(e)}
-		>
-			{!progress ? renderInputHint() : renderProgress()}
-		</div>
-	);
-});
+    return (
+      <div
+        className={`text-xs flex-grow-0 flex justify-center items-center flex-col h-[200px] border-2 border-dashed rounded-md ${
+          progress ? "pointer-events-none" : ""
+        }`}
+        onDrop={(e) => handleDrop(e)}
+        onDragOver={(e) => handleDragOver(e)}
+        onDragEnter={(e) => handleDragEnter(e)}
+        onDragLeave={(e) => handleDragLeave(e)}
+      >
+        {!progress ? renderInputHint() : renderProgress()}
+      </div>
+    );
+  }
+);

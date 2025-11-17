@@ -1,0 +1,85 @@
+@import "tailwindcss";
+@plugin "daisyui";
+
+@theme {
+	/* Color palette */
+	--color-gray-1: #f1fcff;
+	--color-gray-1: #818aa5;
+	--color-blue-0: #3c4a73;
+	--color-blue-1: #5d8dff;
+	--color-dark-0: #1d1d28;
+	--color-dark-1: #262837;
+	--color-dark-2: #313345;
+	
+	/* Font family */
+	--font-sans: "Work Sans", ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Canvas-specific styles that need exact positioning */
+#canvas-grid,
+#canvas-text-layer {
+	pointer-events: none;
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+}
+
+#canvas-background-layer {
+	background: #000000;
+}
+
+.lucide {
+	stroke-width: 1.5px;
+}
+
+.collapse-arrow {
+	& > .collapse-title::after {
+		transform: rotate(-45deg);
+		transform-origin: center;
+		top: calc(50% - 11px);
+		inset-inline-end: 0.5rem;
+	}
+}
+
+.collapse {
+	&.collapse-arrow:not(.collapse-close) {
+		> input:is([type="checkbox"], [type="radio"]):checked ~ .collapse-title:after {
+				transform: translateY(-50%) rotate(45deg) !important;
+		}
+	}
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0; 
+}
+
+input[type=number] {
+    -moz-appearance:textfield;
+}
+
+/* Custom scrollbar styling */
+::-webkit-scrollbar {
+	width: 8px;
+	height: 8px;
+}
+::-webkit-scrollbar-thumb {
+	background: #ffffff30;
+	transition: background 0.3s ease;
+	border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+	background: #ffffff50;
+}
+::-webkit-scrollbar-track {
+	background: transparent;
+	border-radius: 0px;
+	box-shadow: inset 0px 0px 0px 0px #f0f0f0;
+}
+
+::-webkit-scrollbar-corner {
+	background: transparent;
+}
