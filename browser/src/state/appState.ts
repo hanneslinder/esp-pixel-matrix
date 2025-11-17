@@ -85,7 +85,7 @@ const getInitialState = (): AppState => ({
       line: 1,
       align: TextAlign.CENTER,
       offsetX: -1,
-      offsetY: -4,
+      offsetY: -5,
       font: Font.REGULAR,
     },
     {

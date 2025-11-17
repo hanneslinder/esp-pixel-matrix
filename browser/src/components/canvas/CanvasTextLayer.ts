@@ -49,11 +49,22 @@ export class CanvasTextLayer {
 
       const value = strftime(text.text, new Date());
       const width = widthFunction(value, text.size);
-      const yVal = text.line === 1 ? 5 : 23;
+      const fontHeight = 8;
+
+      let yVal: number;
+      if (text.line === 1) {
+        yVal = Math.round(4.5 * text.size);
+      } else {
+        yVal = appState.settings.height - fontHeight * text.size + 1;
+      }
 
       let xVal = 0;
       if (text.align === TextAlign.CENTER) {
         xVal = (appState.settings.width - width) / 2;
+
+        if (text.line === 2) {
+          xVal -= 1;
+        }
       } else if (text.align === TextAlign.RIGHT) {
         xVal = appState.settings.width - width;
       }
