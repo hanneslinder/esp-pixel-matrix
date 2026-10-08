@@ -1,6 +1,11 @@
 #pragma once
 
+// This header declares fixed-width and size types itself, and is included first
+// by other headers (ConfigManager.h), so it must not depend on Arduino.h having
+// been pulled in beforehand. Keep both includes: <cstddef> for size_t and
+// <cstdint> for uint16_t/uint8_t.
 #include <cstddef>
+#include <cstdint>
 
 // WiFi Portal Configuration
 extern const char* ntpServer;
@@ -22,8 +27,13 @@ const int DEFAULT_BRIGHTNESS = 3;
 // bound is empty.
 const size_t QUIET_HOURS_TIME_LENGTH = 6;
 // Brightness used while quiet hours are active. The panel renders black below
-// MIN_BRIGHTNESS, so the sleep icon needs at least this much.
+// MIN_BRIGHTNESS, so the sleep icon needs at least this much. This is global to
+// the panel, so the icon itself cannot be dimmed further - see the colour below.
 const int QUIET_HOURS_BRIGHTNESS = MIN_BRIGHTNESS;
+// Colour of the sleep icon, RGB565. A dim grey rather than pure white: the
+// panel brightness is already at its floor, so this is the only remaining way
+// to make the icon less noticeable at night. 0xFFFF would be white.
+const uint16_t QUIET_HOURS_ICON_COLOR = 0x4208;
 
 // Reset Button Settings
 const int RESET_SHORT_PRESS_TIME = 2000;

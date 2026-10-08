@@ -1,4 +1,5 @@
 #include "MatrixController.h"
+#include "../config/settings.h"
 #include "utils/utils.h"
 #include <Fonts/Picopixel.h>
 
@@ -173,12 +174,17 @@ void MatrixController::render(uint8_t compositionMode, bool quietHoursActive)
 }
 
 // A crescent moon: a disc with a second disc subtracted from its upper right.
-// Monochrome on purpose - a white glyph reads better than colour on a 64x32
-// HUB75 panel, and it keeps the sleep screen unambiguous.
 //
-// Geometry is tuned so the crescent stays a single connected blob at typical
-// panel sizes; moving the bite closer to the disc edge leaves detached dots
-// along the cusp. See the ASCII preview in the commit that added this.
+// Deliberately small and dim: this is a sleep screen, so it should be findable
+// rather than eye-catching. The panel brightness is already at its floor
+// (QUIET_HOURS_BRIGHTNESS == MIN_BRIGHTNESS, below which the panel goes black)
+// and that control is global, so the only way to make the glyph less prominent
+// is to shrink it and draw it grey instead of white.
+//
+// Geometry is tuned so the crescent stays a single connected blob and still
+// reads as a moon. Going smaller (or moving the bite closer to the disc edge)
+// breaks it up into detached dots along the cusp. Checked against a rendered
+// preview: 7x7 / 27 px, one component, versus 7x7 / 27 px at 3.8f here.
 void MatrixController::renderQuietHours()
 {
   if (!matrix) {
@@ -188,15 +194,15 @@ void MatrixController::renderQuietHours()
   const int16_t centreX = (PANEL_WIDTH * PANEL_CHAIN) / 2;
   const int16_t centreY = PANEL_HEIGHT / 2;
 
-  const float moonRadius = 6.5f;
-  const float biteCentreX = centreX - 3.5f;
-  const float biteCentreY = centreY - 2.5f;
-  const float biteRadius = 5.2f;
+  const float moonRadius = 3.8f;
+  const float biteCentreX = centreX - 2.0f;
+  const float biteCentreY = centreY - 1.5f;
+  const float biteRadius = 2.9f;
 
   quietHoursLayer.clear();
 
-  for (int16_t y = centreY - 8; y <= centreY + 8; y++) {
-    for (int16_t x = centreX - 8; x <= centreX + 8; x++) {
+  for (int16_t y = centreY - 5; y <= centreY + 5; y++) {
+    for (int16_t x = centreX - 5; x <= centreX + 5; x++) {
       const float moonDx = x - centreX;
       const float moonDy = y - centreY;
       if (moonDx * moonDx + moonDy * moonDy > moonRadius * moonRadius) {
@@ -209,7 +215,7 @@ void MatrixController::renderQuietHours()
         continue;
       }
 
-      quietHoursLayer.drawPixel(x, y, 0xFFFF);
+      quietHoursLayer.drawPixel(x, y, QUIET_HOURS_ICON_COLOR);
     }
   }
 }
