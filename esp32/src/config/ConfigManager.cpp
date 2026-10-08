@@ -1,6 +1,7 @@
 #include "ConfigManager.h"
 #include "SPIFFS.h"
 #include "settings.h"
+#include <ctype.h>
 
 ConfigManager& ConfigManager::getInstance()
 {
@@ -53,6 +54,10 @@ void ConfigManager::loadDefaults()
   // Display defaults
   _brightness = DEFAULT_BRIGHTNESS;
   _compositionMode = 0;
+
+  // Quiet hours defaults: disabled
+  _quietHoursStart[0] = '\0';
+  _quietHoursEnd[0] = '\0';
 
   // Clock defaults
   _clockVisible = true;
@@ -113,6 +118,12 @@ bool ConfigManager::load()
     _compositionMode = doc["display"]["compositionMode"];
   }
 
+  // Load quiet hours. A missing key leaves the default (disabled) in place.
+  normalizeTimeOfDay(doc["display"]["quietHoursStart"] | "", _quietHoursStart,
+      sizeof(_quietHoursStart));
+  normalizeTimeOfDay(doc["display"]["quietHoursEnd"] | "", _quietHoursEnd,
+      sizeof(_quietHoursEnd));
+
   // Load clock settings
   if (doc["clock"]["visible"]) {
     _clockVisible = doc["clock"]["visible"];
@@ -154,6 +165,8 @@ bool ConfigManager::save()
   // Display settings
   doc["display"]["brightness"] = _brightness;
   doc["display"]["compositionMode"] = _compositionMode;
+  doc["display"]["quietHoursStart"] = _quietHoursStart;
+  doc["display"]["quietHoursEnd"] = _quietHoursEnd;
 
   // Clock settings
   doc["clock"]["visible"] = _clockVisible;
@@ -215,6 +228,20 @@ bool ConfigManager::validateConfig()
     valid = false;
   }
 
+  // Quiet hours must be a complete, valid window or nothing at all. A half set
+  // window would silently never trigger, so drop it and say so.
+  const bool hadQuietHours = _quietHoursStart[0] != '\0' || _quietHoursEnd[0] != '\0';
+  if (!isValidTimeOfDay(_quietHoursStart) || !isValidTimeOfDay(_quietHoursEnd)
+      || (_quietHoursStart[0] == '\0') != (_quietHoursEnd[0] == '\0')) {
+    if (hadQuietHours) {
+      Serial.printf("Invalid quiet hours '%s'-'%s', disabling\n", _quietHoursStart,
+          _quietHoursEnd);
+      valid = false;
+    }
+    _quietHoursStart[0] = '\0';
+    _quietHoursEnd[0] = '\0';
+  }
+
   return valid;
 }
 
@@ -225,6 +252,12 @@ const char* ConfigManager::getTimezone() const { return _timezone; }
 const char* ConfigManager::getLocale() const { return _locale; }
 int ConfigManager::getBrightness() const { return _brightness; }
 int ConfigManager::getCompositionMode() const { return _compositionMode; }
+bool ConfigManager::hasQuietHours() const
+{
+  return _quietHoursStart[0] != '\0' && _quietHoursEnd[0] != '\0';
+}
+const char* ConfigManager::getQuietHoursStart() const { return _quietHoursStart; }
+const char* ConfigManager::getQuietHoursEnd() const { return _quietHoursEnd; }
 bool ConfigManager::isClockVisible() const { return _clockVisible; }
 uint16_t ConfigManager::getTimeColor() const { return _timeColor; }
 uint16_t ConfigManager::getDateColor() const { return _dateColor; }
@@ -254,6 +287,54 @@ void ConfigManager::setBrightness(int brightness)
 
 void ConfigManager::setCompositionMode(int mode) { _compositionMode = mode; }
 
+bool ConfigManager::isValidTimeOfDay(const char* value)
+{
+  if (value == nullptr || value[0] == '\0') {
+    return true; // "unset" is a valid state
+  }
+
+  // Exactly "HH:MM"
+  if (strlen(value) != 5 || value[2] != ':') {
+    return false;
+  }
+  if (!isdigit((unsigned char)value[0]) || !isdigit((unsigned char)value[1])
+      || !isdigit((unsigned char)value[3]) || !isdigit((unsigned char)value[4])) {
+    return false;
+  }
+
+  const int hours = (value[0] - '0') * 10 + (value[1] - '0');
+  const int minutes = (value[3] - '0') * 10 + (value[4] - '0');
+
+  return hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59;
+}
+
+void ConfigManager::normalizeTimeOfDay(const char* value, char* out, size_t outSize)
+{
+  if (outSize == 0) {
+    return;
+  }
+
+  if (!isValidTimeOfDay(value)) {
+    Serial.printf("Ignoring malformed quiet hours value '%s'\n", value ? value : "(null)");
+    out[0] = '\0';
+    return;
+  }
+
+  strlcpy(out, value ? value : "", outSize);
+}
+
+void ConfigManager::setQuietHours(const char* start, const char* end)
+{
+  normalizeTimeOfDay(start, _quietHoursStart, sizeof(_quietHoursStart));
+  normalizeTimeOfDay(end, _quietHoursEnd, sizeof(_quietHoursEnd));
+
+  // Half a window is no window.
+  if ((_quietHoursStart[0] == '\0') != (_quietHoursEnd[0] == '\0')) {
+    _quietHoursStart[0] = '\0';
+    _quietHoursEnd[0] = '\0';
+  }
+}
+
 void ConfigManager::setClockVisible(bool visible) { _clockVisible = visible; }
 
 void ConfigManager::setTimeColor(uint16_t color) { _timeColor = color; }
@@ -278,6 +359,11 @@ void ConfigManager::printConfig() const
   Serial.printf("Locale: %s\n", _locale);
   Serial.printf("Brightness: %d\n", _brightness);
   Serial.printf("Composition Mode: %d\n", _compositionMode);
+  if (hasQuietHours()) {
+    Serial.printf("Quiet Hours: %s - %s\n", _quietHoursStart, _quietHoursEnd);
+  } else {
+    Serial.println("Quiet Hours: disabled");
+  }
   Serial.printf("Clock Visible: %s\n", _clockVisible ? "true" : "false");
   Serial.printf("Time Color: 0x%04X\n", _timeColor);
   Serial.printf("Date Color: 0x%04X\n", _dateColor);

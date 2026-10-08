@@ -10,6 +10,9 @@ export interface Settings {
   width: number;
   height: number;
   pixelRatio: number;
+  /** "HH:MM" quiet hours window; empty strings mean the feature is off. */
+  quietHoursStart: string;
+  quietHoursEnd: string;
 }
 
 export interface AppState {
@@ -106,6 +109,8 @@ const getInitialState = (): AppState => ({
     width: 64,
     height: 32,
     pixelRatio: 10,
+    quietHoursStart: "",
+    quietHoursEnd: "",
   },
   customData: {
     updateInterval: -1,

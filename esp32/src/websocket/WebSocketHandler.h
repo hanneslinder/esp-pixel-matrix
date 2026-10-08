@@ -9,13 +9,15 @@
 class MatrixController;
 class TextDisplayHandler;
 class CustomDataHandler;
+class QuietHoursHandler;
 
 namespace WebSocketHandler {
 
 // Initialize the WebSocket handler with required dependencies
 void init(MatrixController* matrixCtrl, TextItem* textItems, AsyncWebSocket* websocket,
     char* socketBuffer, int* bufferIndex, const int bufferSize,
-    TextDisplayHandler* textDisplayHandler, CustomDataHandler* customDataHandler);
+    TextDisplayHandler* textDisplayHandler, CustomDataHandler* customDataHandler,
+    QuietHoursHandler* quietHoursHandler);
 
 // Main WebSocket message handler
 void handleMessage(void* arg, uint8_t* data, size_t len);

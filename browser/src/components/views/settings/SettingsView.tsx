@@ -2,6 +2,7 @@ import { view } from "@risingstack/react-easy-state";
 import React, { useEffect } from "react";
 import { FirmwareUpdateForm } from "./FirmwareUpdateForm";
 import { BrightnessSlider } from "./BrightnessSlider";
+import { QuietHours } from "./QuietHours";
 import { SaveLoad } from "./SaveLoad";
 import { Canvas } from "../../canvas/Canvas";
 import { getPixelsAction, getStateAction, resetAction } from "../../../Actions";
@@ -48,6 +49,7 @@ export const SettingsView = view(({ getCanvas }: Props) => {
   return (
     <div className="mx-5">
       <BrightnessSlider />
+      <QuietHours />
       <Expandable
         expandedClassName="p-0"
         collapsedContent={<div>Firmware Update</div>}

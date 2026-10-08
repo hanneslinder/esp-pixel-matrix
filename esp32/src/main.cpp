@@ -24,6 +24,7 @@
 #include "input/ResetButtonHandler.h"
 #include "matrix/MatrixController.h"
 #include "ota/OTAUpdateHandler.h"
+#include "quiet/QuietHoursHandler.h"
 #include "server/WebServerHandler.h"
 #include "types/CommonTypes.h"
 #include "utils/utils.h"
@@ -69,6 +70,7 @@ AsyncWebSocket ws("/ws");
 WiFiConnectionHandler wifiHandler(server);
 ResetButtonHandler resetButton(RESET_PIN, RESET_SHORT_PRESS_TIME);
 TextDisplayHandler textDisplay(matrix, textContent, 5);
+QuietHoursHandler quietHours(matrix);
 WebServerHandler webServer(server, ws);
 CustomDataHandler customData;
 
@@ -104,7 +106,7 @@ void initWebSocket()
   ws.enable(true);
 
   WebSocketHandler::init(&matrix, textContent, &ws, socketData, &currSocketBufferIndex,
-      SOCKET_DATA_SIZE, &textDisplay, &customData);
+      SOCKET_DATA_SIZE, &textDisplay, &customData, &quietHours);
 }
 
 void checkHeapAndLog()
@@ -163,6 +165,9 @@ void setup()
   matrix.setBrightness(config.getBrightness());
   Serial.printf("Set initial brightness to %d\n", config.getBrightness());
 
+  // Quiet hours need the matrix ready before they can take over the screen
+  quietHours.begin();
+
   // Initialize WebSocket and Web Server
   initWebSocket();
   webServer.begin();
@@ -202,7 +207,11 @@ void loop()
 
   ws.cleanupClients();
 
-  matrix.render(config.getCompositionMode());
+  // Quiet hours take over the screen when they are active, so this decides
+  // what the panel shows before the frame is pushed out.
+  quietHours.update();
+
+  matrix.render(config.getCompositionMode(), quietHours.isActive());
 
   if (millis() - lastHeapCheck > 300000) {
     lastHeapCheck = millis();

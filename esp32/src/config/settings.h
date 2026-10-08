@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstddef>
+
 // WiFi Portal Configuration
 extern const char* ntpServer;
 extern const char* portalIP;
@@ -14,6 +16,14 @@ extern const char* hostname;
 const int MAX_BRIGHTNESS = 15;
 const int MIN_BRIGHTNESS = 3;
 const int DEFAULT_BRIGHTNESS = 3;
+
+// Quiet Hours Settings
+// Stored as "HH:MM" plus a terminator. Quiet hours are disabled when either
+// bound is empty.
+const size_t QUIET_HOURS_TIME_LENGTH = 6;
+// Brightness used while quiet hours are active. The panel renders black below
+// MIN_BRIGHTNESS, so the sleep icon needs at least this much.
+const int QUIET_HOURS_BRIGHTNESS = MIN_BRIGHTNESS;
 
 // Reset Button Settings
 const int RESET_SHORT_PRESS_TIME = 2000;

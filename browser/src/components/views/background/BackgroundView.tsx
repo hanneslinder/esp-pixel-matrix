@@ -8,7 +8,11 @@ interface Props {
   getCanvas: () => Canvas;
 }
 
-const isImage = (mimeType: string) => mimeType.startsWith("image/");
+// MIME type is the primary signal, but macOS/Windows sometimes report an empty
+// type for images, so fall back to the extension.
+const isImage = (file: File) =>
+  file.type.startsWith("image/") ||
+  /\.(png|jpe?g|gif|webp|bmp|svg|avif)$/i.test(file.name);
 
 export const BackgroundView: React.FC<Props> = view(({ getCanvas }) => {
   const drawImage = (img: HTMLImageElement) => {

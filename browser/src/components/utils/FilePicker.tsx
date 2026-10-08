@@ -1,11 +1,17 @@
 import React, { DragEvent, FormEvent, JSX } from "react";
 import { view } from "@risingstack/react-easy-state";
+import { useState } from "react";
 
 import { ImagePlus } from "lucide-react";
 
 interface FilePickerProps {
   onFileDroppedOrSelected: (file: File) => void;
-  isFileTypeAllowed: (mimeType: string) => boolean;
+  /**
+   * Receives the whole File, not just its MIME type: browsers derive `type`
+   * from the OS association, so a .bin can arrive as application/octet-stream,
+   * application/macbinary, text/plain or "" depending on the machine.
+   */
+  isFileTypeAllowed: (file: File) => boolean;
   label: string;
   progress?: number;
   icon?: JSX.Element;
@@ -20,16 +26,29 @@ export const FilePicker = view(
     icon,
   }: FilePickerProps) => {
     const uploadRef = React.useRef<HTMLInputElement>(null);
-    const onImageSelected = (evt: FormEvent<HTMLDivElement>) => {
-      const target = (evt.target as HTMLInputElement)!;
+    const [rejected, setRejected] = useState<string | null>(null);
 
-      if (
-        target &&
-        target.files &&
-        target.files.length > 0 &&
-        isFileTypeAllowed(target.files[0].type)
-      ) {
-        onFileDroppedOrSelected(target.files[0]);
+    // A silently ignored file looks like a broken button, so always say why.
+    const accept = (file: File | undefined) => {
+      if (!file) {
+        return;
+      }
+
+      if (isFileTypeAllowed(file)) {
+        setRejected(null);
+        onFileDroppedOrSelected(file);
+      } else {
+        console.warn("Rejected file", file.name, "with type", file.type);
+        setRejected(file.name);
+      }
+    };
+
+    const onImageSelected = (evt: FormEvent<HTMLDivElement>) => {
+      const target = evt.target as HTMLInputElement;
+      accept(target?.files?.[0]);
+      // Allow re-selecting the same file after a rejection.
+      if (target) {
+        target.value = "";
       }
     };
 
@@ -47,10 +66,7 @@ export const FilePicker = view(
 
     const handleDrop = (e: DragEvent<HTMLDivElement>) => {
       e.preventDefault();
-
-      if (isFileTypeAllowed(e.dataTransfer.files[0].type)) {
-        onFileDroppedOrSelected(e.dataTransfer.files[0]);
-      }
+      accept(e.dataTransfer.files?.[0]);
     };
 
     const renderInputHint = () => (
@@ -80,6 +96,11 @@ export const FilePicker = view(
             onChange={onImageSelected}
           />
         </div>
+        {rejected && (
+          <div className="text-xs text-error mt-2 text-center px-2">
+            {`"${rejected}" is not a supported file`}
+          </div>
+        )}
       </>
     );
 

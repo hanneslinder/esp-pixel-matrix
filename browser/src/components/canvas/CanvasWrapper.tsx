@@ -21,7 +21,7 @@ export class CanvasWrapperElement extends React.Component<
     const socket = getSocket();
     this.unsubcribeFromMatrixPixelMessage = socket.subscribe(
       IncommingMessageType.MatrixPixelResponse,
-      this.onMatrixPixelResponse
+      this.onMatrixPixelResponse,
     );
   }
 
@@ -40,7 +40,7 @@ export class CanvasWrapperElement extends React.Component<
 
     let currentLine = data["line-start"];
     data.data.forEach((line) => {
-      console.log("Draw pixels in line", currentLine);
+      // console.log("Draw pixels in line", currentLine);
       const pixelData: PixelData[] = line.map((d: string, i: number) => ({
         c: d === "#0" ? "#000000" : d,
         p: [i, currentLine],

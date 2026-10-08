@@ -46,7 +46,7 @@ class WebsocketConnection {
   private readonly onMessage = (event: MessageEvent) => {
     const data = JSON.parse(event.data);
 
-    console.log("Incomming message", data);
+    // console.log("Incomming message", data);
 
     if (this.messageListeners[data.action]) {
       this.messageListeners[data.action].forEach((listener) => listener(data));
@@ -63,7 +63,7 @@ class WebsocketConnection {
     // Unsubscribe
     return () =>
       (this.messageListeners[action] = this.messageListeners[action].filter(
-        (listener) => listener === cb
+        (listener) => listener === cb,
       ));
   }
 

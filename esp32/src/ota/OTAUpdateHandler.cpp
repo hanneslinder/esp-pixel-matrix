@@ -33,13 +33,36 @@ static void handleUpdate(AsyncWebServerRequest* request)
   request->send(200, "text/html", html);
 }
 
+/**
+ * Decide which partition an uploaded OTA file targets.
+ *
+ * This is matched on the filename, so it has to recognise every name the file
+ * system image is published under: PlatformIO names it after
+ * `board_build.filesystem` (littlefs), while the release channel and older
+ * devices still ask for `spiffs.bin`. Getting this wrong writes the file system
+ * image into the application partition, so match the known names exactly rather
+ * than guessing at a suffix.
+ */
+static bool isFileSystemImage(const String& filename)
+{
+  String lower = filename;
+  lower.toLowerCase();
+
+  return lower.indexOf("littlefs") > -1 || lower.indexOf("spiffs") > -1
+      || lower.indexOf("filesystem") > -1;
+}
+
 static void handleDoUpdate(AsyncWebServerRequest* request, const String& filename, size_t index,
     uint8_t* data, size_t len, bool final)
 {
   if (!index) {
     Serial.println("Update");
     g_updateContentLength = request->contentLength();
-    int cmd = (filename.indexOf("spiffs") > -1) ? U_PART : U_FLASH;
+    const bool isFileSystem = isFileSystemImage(filename);
+    int cmd = isFileSystem ? U_PART : U_FLASH;
+
+    Serial.printf("OTA target: %s (filename '%s')\n", isFileSystem ? "filesystem" : "firmware",
+        filename.c_str());
 
     if (!Update.begin(UPDATE_SIZE_UNKNOWN, cmd)) {
       Update.printError(Serial);

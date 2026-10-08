@@ -4,6 +4,7 @@
 #include "../data/CustomDataHandler.h"
 #include "../display/TextDisplayHandler.h"
 #include "../matrix/MatrixController.h"
+#include "../quiet/QuietHoursHandler.h"
 #include "../utils/utils.h"
 #include "SPIFFS.h"
 #include "time.h"
@@ -35,6 +36,7 @@ static int* currSocketBufferIndex = nullptr;
 static int socketBufferSize = 0;
 static TextDisplayHandler* textDisplay = nullptr;
 static CustomDataHandler* customData = nullptr;
+static QuietHoursHandler* quietHours = nullptr;
 
 // ============================================================================
 // INITIALIZATION
@@ -42,7 +44,8 @@ static CustomDataHandler* customData = nullptr;
 
 void init(MatrixController* matrixCtrl, TextItem* textItems, AsyncWebSocket* websocket,
     char* socketBuffer, int* bufferIndex, const int bufferSize,
-    TextDisplayHandler* textDisplayHandler, CustomDataHandler* customDataHandler)
+    TextDisplayHandler* textDisplayHandler, CustomDataHandler* customDataHandler,
+    QuietHoursHandler* quietHoursHandler)
 {
   matrix = matrixCtrl;
   textContent = textItems;
@@ -52,6 +55,7 @@ void init(MatrixController* matrixCtrl, TextItem* textItems, AsyncWebSocket* web
   socketBufferSize = bufferSize;
   textDisplay = textDisplayHandler;
   customData = customDataHandler;
+  quietHours = quietHoursHandler;
 
   Serial.println("WebSocketHandler initialized");
 }
@@ -206,6 +210,43 @@ void handleSetLocale(JsonDocument& doc)
   Serial.printf("Locale updated to: %s\n", loc);
 }
 
+// Starts and ends arrive together; an empty value for either one disables
+// quiet hours. See ConfigManager::setQuietHours for the validation rules.
+void handleSetQuietHours(JsonDocument& doc)
+{
+  const char* start = doc["start"] | "";
+  const char* end = doc["end"] | "";
+
+  config.setQuietHours(start, end);
+  config.save();
+
+  if (quietHours != nullptr) {
+    quietHours->handleConfigChange();
+  }
+
+  broadcastConfigUpdate();
+
+  if (config.hasQuietHours()) {
+    Serial.printf("Quiet hours set to %s - %s\n", config.getQuietHoursStart(),
+        config.getQuietHoursEnd());
+  } else {
+    Serial.println("Quiet hours disabled");
+  }
+}
+
+void handleClearQuietHours(JsonDocument& doc)
+{
+  config.setQuietHours("", "");
+  config.save();
+
+  if (quietHours != nullptr) {
+    quietHours->handleConfigChange();
+  }
+
+  broadcastConfigUpdate();
+  Serial.println("Quiet hours cleared");
+}
+
 void handleCustomData(JsonDocument& doc)
 {
   JsonObject customDataObj = doc["options"].as<JsonObject>();
@@ -314,6 +355,8 @@ void sendState()
   doc["brightness"] = config.getBrightness();
   doc["timezone"] = config.getTimezone();
   doc["locale"] = config.getLocale();
+  doc["quietHoursStart"] = config.getQuietHoursStart();
+  doc["quietHoursEnd"] = config.getQuietHoursEnd();
 
   for (int i = 0; i < 5; i++) {
     if (strcmp(textContent[i].text, "") != 0) {
@@ -375,6 +418,10 @@ void dispatchAction(const char* action, JsonDocument& doc)
     handleSetTimeZone(doc);
   } else if (isStringEqual(action, "setLocale")) {
     handleSetLocale(doc);
+  } else if (isStringEqual(action, "setQuietHours")) {
+    handleSetQuietHours(doc);
+  } else if (isStringEqual(action, "clearQuietHours")) {
+    handleClearQuietHours(doc);
   } else if (isStringEqual(action, "customData")) {
     handleCustomData(doc);
   }

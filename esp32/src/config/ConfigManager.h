@@ -1,6 +1,7 @@
 #ifndef CONFIG_MANAGER_H
 #define CONFIG_MANAGER_H
 
+#include "settings.h"
 #include <Arduino.h>
 #include <ArduinoJson.h>
 
@@ -42,6 +43,15 @@ class ConfigManager {
   int getCompositionMode() const;
   void setCompositionMode(int mode);
 
+  // Quiet Hours Configuration
+  // A window in local time during which the matrix only shows a sleep icon at
+  // minimum brightness. Either bound may be empty, which disables the feature.
+  bool hasQuietHours() const;
+  const char* getQuietHoursStart() const; // "HH:MM" or ""
+  const char* getQuietHoursEnd() const;   // "HH:MM" or ""
+  // Sets both bounds at once; empty or malformed values disable quiet hours.
+  void setQuietHours(const char* start, const char* end);
+
   // Clock Configuration
   bool isClockVisible() const;
   void setClockVisible(bool visible);
@@ -73,6 +83,10 @@ class ConfigManager {
   void loadDefaults();
   bool validateConfig();
 
+  // Quiet hours bounds are stored as "HH:MM"; accepts NULL or "" as "unset".
+  static bool isValidTimeOfDay(const char* value);
+  static void normalizeTimeOfDay(const char* value, char* out, size_t outSize);
+
   // Configuration file path
   static constexpr const char* CONFIG_FILE = "/config.json";
 
@@ -87,6 +101,10 @@ class ConfigManager {
   // Display settings
   int _brightness;
   int _compositionMode;
+
+  // Quiet hours settings ("HH:MM", empty when unset)
+  char _quietHoursStart[QUIET_HOURS_TIME_LENGTH];
+  char _quietHoursEnd[QUIET_HOURS_TIME_LENGTH];
 
   // Clock settings
   bool _clockVisible;

@@ -8,7 +8,9 @@ MatrixController::MatrixController()
     : matrix(nullptr)
     , bgLayer(PANEL_WIDTH * PANEL_CHAIN, PANEL_HEIGHT, layer_draw_callback)
     , textLayer(PANEL_WIDTH * PANEL_CHAIN, PANEL_HEIGHT, layer_draw_callback)
+    , quietHoursLayer(PANEL_WIDTH * PANEL_CHAIN, PANEL_HEIGHT, layer_draw_callback)
     , gfx_compositor(layer_draw_callback)
+    , currentBrightness(3)
 {
   instance = this;
 }
@@ -38,6 +40,7 @@ void MatrixController::begin()
 
   bgLayer.clear();
   textLayer.clear();
+  quietHoursLayer.clear();
 
   gfx_compositor.Stack(bgLayer, textLayer);
 }
@@ -46,6 +49,7 @@ void MatrixController::setBrightness(uint8_t brightness)
 {
   if (matrix) {
     Serial.printf("MatrixController::setBrightness called with value: %d\n", brightness);
+    currentBrightness = brightness;
     matrix->setBrightness8(brightness);
     Serial.printf("setBrightness8(%d) completed\n", brightness);
   } else {
@@ -57,6 +61,7 @@ void MatrixController::clear()
 {
   bgLayer.clear();
   textLayer.clear();
+  quietHoursLayer.clear();
 }
 
 void MatrixController::drawPixel(int16_t x, int16_t y, uint16_t color)
@@ -135,22 +140,76 @@ void MatrixController::layer_draw_callback(
   }
 }
 
-void MatrixController::render(uint8_t compositionMode)
+void MatrixController::render(uint8_t compositionMode, bool quietHoursActive)
 {
-  if (matrix) {
-    switch (compositionMode) {
-    case 0:
-      getCompositor().Stack(getBackgroundLayer(), getTextLayer());
-      break;
-    case 1:
-      getCompositor().Blend(getBackgroundLayer(), getTextLayer());
-      break;
-    case 2:
-      getCompositor().Siloette(getBackgroundLayer(), getTextLayer());
-      break;
-    default:
-      getCompositor().Stack(getBackgroundLayer(), getTextLayer());
-      break;
+  if (!matrix) {
+    return;
+  }
+
+  // Quiet hours replace the whole screen: the sleep icon is composited over a
+  // black quiet-hours layer, so neither the user's drawing nor the clock shows.
+  // Stacking the layer against itself is deliberate - Stack() falls back to the
+  // background pixel wherever the foreground is transparent (black), so this
+  // pushes exactly this layer to the panel and blanks everything else.
+  if (quietHoursActive) {
+    getCompositor().Stack(quietHoursLayer, quietHoursLayer);
+    return;
+  }
+
+  switch (compositionMode) {
+  case 0:
+    getCompositor().Stack(getBackgroundLayer(), getTextLayer());
+    break;
+  case 1:
+    getCompositor().Blend(getBackgroundLayer(), getTextLayer());
+    break;
+  case 2:
+    getCompositor().Siloette(getBackgroundLayer(), getTextLayer());
+    break;
+  default:
+    getCompositor().Stack(getBackgroundLayer(), getTextLayer());
+    break;
+  }
+}
+
+// A crescent moon: a disc with a second disc subtracted from its upper right.
+// Monochrome on purpose - a white glyph reads better than colour on a 64x32
+// HUB75 panel, and it keeps the sleep screen unambiguous.
+//
+// Geometry is tuned so the crescent stays a single connected blob at typical
+// panel sizes; moving the bite closer to the disc edge leaves detached dots
+// along the cusp. See the ASCII preview in the commit that added this.
+void MatrixController::renderQuietHours()
+{
+  if (!matrix) {
+    return;
+  }
+
+  const int16_t centreX = (PANEL_WIDTH * PANEL_CHAIN) / 2;
+  const int16_t centreY = PANEL_HEIGHT / 2;
+
+  const float moonRadius = 6.5f;
+  const float biteCentreX = centreX - 3.5f;
+  const float biteCentreY = centreY - 2.5f;
+  const float biteRadius = 5.2f;
+
+  quietHoursLayer.clear();
+
+  for (int16_t y = centreY - 8; y <= centreY + 8; y++) {
+    for (int16_t x = centreX - 8; x <= centreX + 8; x++) {
+      const float moonDx = x - centreX;
+      const float moonDy = y - centreY;
+      if (moonDx * moonDx + moonDy * moonDy > moonRadius * moonRadius) {
+        continue;
+      }
+
+      const float biteDx = x - biteCentreX;
+      const float biteDy = y - biteCentreY;
+      if (biteDx * biteDx + biteDy * biteDy <= biteRadius * biteRadius) {
+        continue;
+      }
+
+      quietHoursLayer.drawPixel(x, y, 0xFFFF);
     }
   }
 }

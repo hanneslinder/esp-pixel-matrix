@@ -43,6 +43,12 @@ export const syncFullStateAction = async (pixelData: PixelData[]) => {
 	setBrightnessAction(appState.settings.brightness);
 	await waitFor(100);
 
+	setQuietHoursAction(
+		appState.settings.quietHoursStart,
+		appState.settings.quietHoursEnd
+	);
+	await waitFor(100);
+
 	drawImageAction(pixelData);
 };
 
@@ -139,6 +145,32 @@ export const setBrightnessAction = (brightness: number) => {
 	};
 
 	appState.settings.brightness = brightness;
+	socket.send(msg);
+};
+
+/**
+ * Sets the quiet hours window. Times are "HH:MM"; pass empty strings to turn
+ * the feature off (see clearQuietHoursAction).
+ */
+export const setQuietHoursAction = (start: string, end: string) => {
+	const msg = {
+		action: "setQuietHours",
+		start,
+		end,
+	};
+
+	appState.settings.quietHoursStart = start;
+	appState.settings.quietHoursEnd = end;
+	socket.send(msg);
+};
+
+export const clearQuietHoursAction = () => {
+	const msg = {
+		action: "clearQuietHours",
+	};
+
+	appState.settings.quietHoursStart = "";
+	appState.settings.quietHoursEnd = "";
 	socket.send(msg);
 };
 

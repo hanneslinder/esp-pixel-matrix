@@ -10,7 +10,14 @@ interface ProgressUpdateData {
   progress: number;
 }
 
-const isFirmwareFile = (mimeType: string) => mimeType.startsWith("application");
+/**
+ * Both OTA payloads are .bin files, and the browser's MIME type for those is
+ * whatever the OS decides (application/octet-stream, application/macbinary,
+ * text/plain, sometimes ""), so trusting `type` rejects perfectly good files.
+ * The device routes by filename anyway - see isFileSystemImage() in
+ * OTAUpdateHandler.cpp - so match on the name.
+ */
+const isFirmwareFile = (file: File) => file.name.toLowerCase().endsWith(".bin");
 const matrixIP = (window as any).websocketUrl;
 
 async function sendData(data: File) {
