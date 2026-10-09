@@ -1,5 +1,6 @@
-import React, { useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import ReactDOM from "react-dom";
+import { useSyncAppState } from "./utils/hooks";
 import { view } from "@risingstack/react-easy-state";
 
 import {
@@ -14,6 +15,7 @@ import "./index.css";
 
 const App = view(() => {
   const canvasWrapperRef = useRef<CanvasWrapperElement>(null);
+  useSyncAppState();
 
   return (
     <div className="flex flex-col flex-grow w-screen bg-gray-900 font-sans text-sm">
@@ -26,11 +28,11 @@ const App = view(() => {
           <CanvasWrapper ref={canvasWrapperRef} />
         </div>
         <div className="bg-gray-800 flex-grow-0 basis-[350px] min-w-[280px] max-h-[calc(100vh-40px)] overflow-auto">
-          <ViewWrapper getCanvas={() => canvasWrapperRef.current.canvas} />
+          <ViewWrapper getCanvas={() => canvasWrapperRef.current?.canvas!!} />
         </div>
       </div>
     </div>
   );
 });
 
-ReactDOM.render(<App />, document.getElementById("app"));
+ReactDOM.render(<App />, document.getElementById("app")!!);

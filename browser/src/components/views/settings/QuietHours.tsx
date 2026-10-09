@@ -6,11 +6,6 @@ import { appState } from "../../../state/appState";
 
 interface Props {}
 
-/**
- * Turns any value coming out of <input type="time"> into the "HH:MM" the
- * firmware expects. Browsers may include seconds ("22:00:00") and may return
- * an empty string while the user is still typing.
- */
 const toHoursMinutes = (value: string): string => {
   if (!value) {
     return "";
@@ -31,8 +26,6 @@ export const QuietHours: React.FC<Props> = view(() => {
   const onChange = (part: "start" | "end", value: string) => {
     const normalized = toHoursMinutes(value);
 
-    // The firmware treats a half filled window as disabled, so sending one
-    // bound before the other is set is harmless.
     if (part === "start") {
       setQuietHoursAction(normalized, quietHoursEnd);
     } else {

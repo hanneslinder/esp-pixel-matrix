@@ -1,6 +1,3 @@
-import { getPixelsAction, getStateAction } from "./Actions";
-import { appState } from "./state/appState";
-
 const ip = (window as any).websocketUrl;
 const gateway = `ws://${ip}/ws`;
 
@@ -19,31 +16,37 @@ interface MessageListenerMap {
   [key: string]: Function[];
 }
 
+type ConnectionListener = (isConnected: boolean) => void;
+
 class WebsocketConnection {
   private websocket: WebSocket = new WebSocket(gateway);
   private messageListeners: MessageListenerMap = {};
+  private connectionListeners: ConnectionListener[] = [];
+  private connected = false;
 
   constructor() {
-    this.websocket.onopen = this.onOpen;
-    this.websocket.onclose = this.onClose;
-    this.websocket.onmessage = this.onMessage;
+    this.websocket.onopen = this.handleOpen;
+    this.websocket.onclose = this.handleClose;
+    this.websocket.onmessage = this.handleMessage;
   }
 
-  private readonly onOpen = (event: Event) => {
+  public get readyState(): number {
+    return this.websocket.readyState;
+  }
+
+  private readonly handleOpen = () => {
     console.log("Connection opened");
-    appState.connection.state = this.websocket.readyState;
-
-    // Sync remote state on connection open
-    getPixelsAction();
-    getStateAction();
+    this.connected = true;
+    this.connectionListeners.forEach((listener) => listener(true));
   };
 
-  private readonly onClose = (event: Event) => {
+  private readonly handleClose = () => {
     console.log("Connection closed");
-    appState.connection.state = this.websocket.readyState;
+    this.connected = false;
+    this.connectionListeners.forEach((listener) => listener(false));
   };
 
-  private readonly onMessage = (event: MessageEvent) => {
+  private readonly handleMessage = (event: MessageEvent) => {
     const data = JSON.parse(event.data);
 
     // console.log("Incomming message", data);
@@ -65,6 +68,17 @@ class WebsocketConnection {
       (this.messageListeners[action] = this.messageListeners[action].filter(
         (listener) => listener === cb,
       ));
+  }
+
+  public subscribeToConnection(cb: ConnectionListener): () => void {
+    this.connectionListeners.push(cb);
+    cb(this.connected);
+
+    return () => {
+      this.connectionListeners = this.connectionListeners.filter(
+        (listener) => listener !== cb,
+      );
+    };
   }
 
   public send(message: Message): void {

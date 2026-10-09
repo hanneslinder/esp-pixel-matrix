@@ -14,10 +14,6 @@ export type AppStateToPersist = Omit<
   AppState,
   "savedItems" | "connection" | "loadedItemId"
 >;
-export type StateFromRemote = Omit<
-  AppState,
-  "savedItems" | "connection" | "loadedItemId" | "matrix" | "tools" | "view"
->;
 export interface PixelsFromRemote {
   action: "matrixPixels";
   data: string[][];
@@ -27,11 +23,11 @@ export interface PixelsFromRemote {
 }
 
 export const getStoredState = (): AppStateToPersist => {
-  return JSON.parse(localStorage.getItem("state"));
+  return JSON.parse(localStorage.getItem("state") || "{}");
 };
 
 const getIndex = (): string[] => {
-  return JSON.parse(localStorage.getItem("data-ids")) || [];
+  return JSON.parse(localStorage.getItem("data-ids") || "[]") || [];
 };
 
 const updateIndex = (ids: string[]) => {
@@ -55,7 +51,7 @@ const removeFromIndex = (id: string) => {
 export const saveView = (
   pixelData: PixelData[],
   name: string,
-  id = createId()
+  id = createId(),
 ) => {
   console.log("Save", id, name);
 
@@ -92,7 +88,7 @@ export const deleteItem = (id: string) => {
 export const getSavedItemsFromLocalStorage = (): SavedItem[] => {
   const items: SavedItem[] = [];
   getIndex().forEach((id) => {
-    const item = JSON.parse(localStorage.getItem(`data-${id}`));
+    const item = JSON.parse(localStorage.getItem(`data-${id}`) || "null");
     if (item) {
       items.push(item);
     }

@@ -1,31 +1,17 @@
 import { view } from "@risingstack/react-easy-state";
-import React, { useEffect } from "react";
 import { FirmwareUpdateForm } from "./FirmwareUpdateForm";
 import { BrightnessSlider } from "./BrightnessSlider";
 import { QuietHours } from "./QuietHours";
 import { SaveLoad } from "./SaveLoad";
 import { Canvas } from "../../canvas/Canvas";
 import { getPixelsAction, getStateAction, resetAction } from "../../../Actions";
-import { getSocket, IncommingMessageType } from "../../../Websocket";
-import { StateFromRemote } from "../../../utils/storage";
-import { appState } from "../../../state/appState";
 import { Expandable } from "../../utils/Expandable";
 
 interface Props {
   getCanvas: () => Canvas;
 }
 
-// Sync settings from esp32 back to app
-const onRemoteStateReceived = (state: StateFromRemote) => {
-  Object.keys(state).forEach((key: keyof StateFromRemote) => {
-    (appState[key] as any) = state[key];
-    console.log("Updated appState from remote:", key, state[key]);
-  });
-};
-
 export const SettingsView = view(({ getCanvas }: Props) => {
-  let unsubscribeFromStateMessage: () => void;
-
   const getRemoteState = () => {
     getPixelsAction();
     getStateAction();
@@ -34,17 +20,6 @@ export const SettingsView = view(({ getCanvas }: Props) => {
   const reset = () => {
     resetAction();
   };
-
-  useEffect(() => {
-    unsubscribeFromStateMessage = getSocket().subscribe(
-      IncommingMessageType.MatrixSettingsResponse,
-      onRemoteStateReceived
-    );
-
-    return function cleanup() {
-      unsubscribeFromStateMessage();
-    };
-  }, [unsubscribeFromStateMessage]);
 
   return (
     <div className="mx-5">
