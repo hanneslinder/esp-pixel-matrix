@@ -155,6 +155,14 @@ void setup()
   // Copy timezone from config for runtime use
   strlcpy(currentTimezone, config.getTimezone(), sizeof(currentTimezone));
 
+  // The esp32 defaults to modem power save, which lets the AP-facing TCP stack
+  // miss ACK deadlines while a large response is in flight - the browser then
+  // reports a truncated download (ERR_CONTENT_LENGTH_MISMATCH). Set it before
+  // the station starts: the core applies getSleep() on WIFI_STA_START, and
+  // re-applies it on every later (re)connect. The web UI is this device's main
+  // interface, so keep the radio awake.
+  WiFi.setSleep(false);
+
   // Initialize WiFi
   wifiHandler.begin(useCaptivePortal, ssid, password);
 
