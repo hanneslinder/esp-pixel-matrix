@@ -26,6 +26,7 @@
 #include "ota/OTAUpdateHandler.h"
 #include "quiet/QuietHoursHandler.h"
 #include "server/WebServerHandler.h"
+#include "state/StateStore.h"
 #include "types/CommonTypes.h"
 #include "utils/utils.h"
 #include "websocket/WebSocketHandler.h"
@@ -35,6 +36,10 @@
 
 // Get singleton instance of ConfigManager
 ConfigManager& config = ConfigManager::getInstance();
+
+// Persists the rendered content (background drawing, text layout, clock
+// visibility) across reboots; settings are ConfigManager's job.
+StateStore& stateStore = StateStore::getInstance();
 
 // Moved OTA progress state into OTAUpdate module
 
@@ -138,12 +143,13 @@ void checkHeapAndLog()
 void setup()
 {
   Serial.begin(115200);
-  SPIFFS.begin();
 
-  // Initialize ConfigManager first
+  if (!SPIFFS.begin()) {
+    Serial.println("ERROR: SPIFFS mount failed.");
+  }
+
   config.begin();
 
-  // Initialize text display with locale from config
   textDisplay.setLocale(config.getLocale());
 
   socketData = (char*)malloc(SOCKET_DATA_SIZE * sizeof(char));
@@ -152,15 +158,8 @@ void setup()
   resetButton.begin();
   resetButton.onLongPress([]() { resetWifi(); });
 
-  // Copy timezone from config for runtime use
   strlcpy(currentTimezone, config.getTimezone(), sizeof(currentTimezone));
 
-  // The esp32 defaults to modem power save, which lets the AP-facing TCP stack
-  // miss ACK deadlines while a large response is in flight - the browser then
-  // reports a truncated download (ERR_CONTENT_LENGTH_MISMATCH). Set it before
-  // the station starts: the core applies getSleep() on WIFI_STA_START, and
-  // re-applies it on every later (re)connect. The web UI is this device's main
-  // interface, so keep the radio awake.
   WiFi.setSleep(false);
 
   // Initialize WiFi
@@ -172,6 +171,12 @@ void setup()
   // Apply brightness from config
   matrix.setBrightness(config.getBrightness());
   Serial.printf("Set initial brightness to %d\n", config.getBrightness());
+
+  // Bring back what the panel was showing before the last power cycle. This
+  // has to happen after the layers exist and before the first render, so the
+  // restored drawing is what the panel shows instead of a black screen.
+  stateStore.init(&matrix, textContent, 5, &showText);
+  stateStore.begin();
 
   // Quiet hours need the matrix ready before they can take over the screen
   quietHours.begin();
@@ -199,6 +204,14 @@ void loop()
     delay(6000);
 
     startupFinished = true;
+
+    // The splash is drawn into the text layer, and that layer is only repainted
+    // from textDisplay.renderText() while the clock is visible. With the clock
+    // hidden (persisted now, so this survives a reboot) it would otherwise stay
+    // on screen forever.
+    if (!showText) {
+      matrix.getTextLayer().clear();
+    }
   } else if (resetButton.isPressed()) {
     char resetTimeString[16];
     itoa(resetButton.getPressDuration(), resetTimeString, 10);
@@ -212,6 +225,9 @@ void loop()
   }
 
   customData.update();
+
+  // Flushes a pending state save once edits have stopped arriving.
+  stateStore.update();
 
   ws.cleanupClients();
 

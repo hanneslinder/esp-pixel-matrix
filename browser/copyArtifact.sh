@@ -24,6 +24,7 @@ DESTINATION="../esp32/data"
 gzip -9 -n -c "$CSS_PATH" > "$CSS_PATH.gz"
 gzip -9 -n -c "$JS_PATH" > "$JS_PATH.gz"
 
-cp "$CSS_PATH" "$CSS_PATH.gz" "$JS_PATH" "$JS_PATH.gz" "$HTML_PATH" "$DESTINATION/"
+# cp "$CSS_PATH" "$CSS_PATH.gz" "$JS_PATH" "$JS_PATH.gz" "$HTML_PATH" "$DESTINATION/"
+cp "$CSS_PATH.gz" "$JS_PATH.gz" "$HTML_PATH" "$DESTINATION/"
 
 echo "Files copied to $DESTINATION"

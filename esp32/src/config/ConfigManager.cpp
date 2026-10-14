@@ -119,10 +119,9 @@ bool ConfigManager::load()
   }
 
   // Load quiet hours. A missing key leaves the default (disabled) in place.
-  normalizeTimeOfDay(doc["display"]["quietHoursStart"] | "", _quietHoursStart,
-      sizeof(_quietHoursStart));
-  normalizeTimeOfDay(doc["display"]["quietHoursEnd"] | "", _quietHoursEnd,
-      sizeof(_quietHoursEnd));
+  normalizeTimeOfDay(
+      doc["display"]["quietHoursStart"] | "", _quietHoursStart, sizeof(_quietHoursStart));
+  normalizeTimeOfDay(doc["display"]["quietHoursEnd"] | "", _quietHoursEnd, sizeof(_quietHoursEnd));
 
   // Load clock settings
   if (doc["clock"]["visible"]) {
@@ -147,7 +146,10 @@ bool ConfigManager::load()
   }
 
   Serial.println("Configuration loaded from file");
-  return validateConfig();
+
+  validateConfig();
+
+  return true;
 }
 
 bool ConfigManager::save()
@@ -234,8 +236,7 @@ bool ConfigManager::validateConfig()
   if (!isValidTimeOfDay(_quietHoursStart) || !isValidTimeOfDay(_quietHoursEnd)
       || (_quietHoursStart[0] == '\0') != (_quietHoursEnd[0] == '\0')) {
     if (hadQuietHours) {
-      Serial.printf("Invalid quiet hours '%s'-'%s', disabling\n", _quietHoursStart,
-          _quietHoursEnd);
+      Serial.printf("Invalid quiet hours '%s'-'%s', disabling\n", _quietHoursStart, _quietHoursEnd);
       valid = false;
     }
     _quietHoursStart[0] = '\0';

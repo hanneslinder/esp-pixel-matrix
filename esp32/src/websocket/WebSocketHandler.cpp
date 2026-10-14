@@ -5,6 +5,7 @@
 #include "../display/TextDisplayHandler.h"
 #include "../matrix/MatrixController.h"
 #include "../quiet/QuietHoursHandler.h"
+#include "../state/StateStore.h"
 #include "../utils/utils.h"
 #include "SPIFFS.h"
 #include "time.h"
@@ -27,6 +28,10 @@ namespace WebSocketHandler {
 
 // Get ConfigManager instance
 static ConfigManager& config = ConfigManager::getInstance();
+
+// Persisted content state. Every handler that changes what the panel renders
+// marks it dirty; the write itself is debounced in StateStore::update().
+static StateStore& stateStore = StateStore::getInstance();
 
 static MatrixController* matrix = nullptr;
 static TextItem* textContent = nullptr;
@@ -87,6 +92,8 @@ void handleDrawPixel(JsonDocument& doc)
     const uint16_t c = strtol(color, NULL, 16);
     matrix->getBackgroundLayer().drawPixel(x, y, c);
   }
+
+  stateStore.markDirty();
 }
 
 void handleDrawImage(JsonDocument& doc)
@@ -107,12 +114,15 @@ void handleDrawImage(JsonDocument& doc)
     }
     index++;
   }
+
+  stateStore.markDirty();
 }
 
 void handleClear(JsonDocument& doc)
 {
   matrix->getBackgroundLayer().clear();
   matrix->getTextLayer().clear();
+  stateStore.markDirty();
 }
 
 void handleFill(JsonDocument& doc)
@@ -120,6 +130,7 @@ void handleFill(JsonDocument& doc)
   const char* color = doc["color"];
   const uint16_t c = strtol(color, NULL, 16);
   matrix->getBackgroundLayer().fillScreen(c);
+  stateStore.markDirty();
 }
 
 // ============================================================================
@@ -131,6 +142,7 @@ void handleToggleClock(JsonDocument& doc)
   matrix->getTextLayer().clear();
   lastshowText = showText;
   showText = doc["visible"];
+  stateStore.markDirty();
 }
 
 void handleSetText(JsonDocument& doc)
@@ -154,6 +166,8 @@ void handleSetText(JsonDocument& doc)
 
     ++index;
   }
+
+  stateStore.markDirty();
 }
 
 // ============================================================================
